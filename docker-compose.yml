@@ -1,0 +1,15 @@
+services:
+  gocd-server:
+    image: gocd/gocd-server:v25.3.0 
+    container_name: gocd-server
+    restart: unless-stopped
+    ports:
+      - "8153:8153"
+      - "8154:8154"
+    volumes:
+      - gocd_data:/godata
+      - gocd_home:/home/go
+
+volumes:
+  gocd_data:
+  gocd_home:
