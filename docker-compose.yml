@@ -1,11 +1,13 @@
 services:
   gocd-server:
-    image: gocd/gocd-server:v25.3.0 
+    build: .
     container_name: gocd-server
     restart: unless-stopped
     ports:
       - "8153:8153"
       - "8154:8154"
+    env_file:
+      - .env.docker # Injects GOCD_ADMIN_PASSWORD at runtime
     volumes:
       - gocd_data:/godata
       - gocd_home:/home/go

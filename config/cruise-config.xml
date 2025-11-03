@@ -1,0 +1,23 @@
+<!-- config/cruise-config.xml -->
+<cruise schemaVersion="139">
+  <server agentAutoRegisterKey="default">
+  </server>
+  <pipelines group="defaultGroup">
+    <pipeline name="badminton_court">
+      <materials>
+        <git url="https://github.com/xmione/badminton_court.git" />
+      </materials>
+      <stage name="build">
+        <jobs>
+          <job name="build_job">
+            <tasks>
+              <exec command="echo">
+                <arg>Placeholder pipeline is running</arg>
+              </exec>
+            </tasks>
+          </job>
+        </jobs>
+      </stage>
+    </pipeline>
+  </pipelines>
+</cruise>
