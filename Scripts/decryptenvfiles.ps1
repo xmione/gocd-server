@@ -1,7 +1,7 @@
 <#=====================================================
  To run:
 
-       & "C:\repo\badminton_court\Scripts\decryptenvfiles.ps1"
+       & "C:\repo\gocd-server\Scripts\decryptenvfiles.ps1"
 
    Or
 
@@ -38,6 +38,6 @@ function DecryptEnvFile {
     $passphrase = $null
 }
 
-DecryptEnvFile -encryptedFile ".e.env.dev.gpg" ".env.dev"
+#DecryptEnvFile -encryptedFile ".e.env.dev.gpg" ".env.dev"
 DecryptEnvFile -encryptedFile ".e.env.docker.gpg" ".env.docker"
 # DecryptEnvFile -encryptedFile ".e.cypress.env.json.gpg" ".cypress.env.json"

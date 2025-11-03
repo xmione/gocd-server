@@ -1,4 +1,5 @@
 #!/bin/bash
+# Scripts/entrypoint.sh
 set -e # Exit on error
 
 # Substitute the password from the .env.docker file into the user config template

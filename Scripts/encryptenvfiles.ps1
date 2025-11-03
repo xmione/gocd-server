@@ -1,7 +1,7 @@
 <#=====================================================
  To run:
 
-       & "C:\repo\badminton_court\Scripts\encryptenvfiles.ps1"
+       & "C:\repo\gocd-server\Scripts\encryptenvfiles.ps1"
 
    Or
 
@@ -13,9 +13,7 @@ function EncryptEnvFiles {
     $passphrase = .\Scripts\get-gh-variable.ps1 
     Write-Host "Using passphrase: $passphrase"
     $envFiles = @(
-        ".env.dev" 
-        ,".env.docker" 
-        # ,"cypress.env.json"
+        ".env.docker" 
     )
 
     foreach ($file in $envFiles) {
