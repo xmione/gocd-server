@@ -1,6 +1,27 @@
 <!-- config/cruise-config.xml -->
 <cruise schemaVersion="139">
+  <!-- The serverId attribute is removed to allow GoCD to auto-generate it on first run -->
   <server agentAutoRegisterKey="default">
+    <security>
+      <authConfigs>
+        <authConfig id="password_file" pluginId="cd.go.authentication.passwordfile">
+          <property>
+            <key>PasswordFilePath</key>
+            <value>/godata/config/password.properties</value>
+          </property>
+        </authConfig>
+      </authConfigs>
+      <roles>
+        <role name="gocd-system-administrators">
+          <users>
+            <user>admin</user>
+          </users>
+        </role>
+      </roles>
+      <admins>
+        <user>admin</user>
+      </admins>
+    </security>
   </server>
   <pipelines group="defaultGroup">
     <pipeline name="badminton_court">

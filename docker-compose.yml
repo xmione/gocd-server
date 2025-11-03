@@ -1,3 +1,4 @@
+# docker-compose.yml
 services:
   gocd-server:
     build: .
@@ -7,7 +8,7 @@ services:
       - "8153:8153"
       - "8154:8154"
     env_file:
-      - .env.docker # Injects GOCD_ADMIN_PASSWORD at runtime
+      - .env.docker 
     volumes:
       - gocd_data:/godata
       - gocd_home:/home/go
