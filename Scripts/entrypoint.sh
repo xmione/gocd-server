@@ -2,16 +2,18 @@
 # Scripts/entrypoint.sh
 set -e # Exit on error
 
-# Forcefully remove the entire config directory to ensure a clean start.
-# This is the most reliable way to prevent serverId conflicts.
-rm -rf /godata/config
+# Ensure the config directory exists
+mkdir -p /godata/config
+
+# Check if the main config file exists to ensure this is the first run.
+if [ ! -f /godata/config/cruise-config.xml ]; then
+  echo "Performing first-time initialization: copying cruise-config.xml template."
+  cp /tmp/cruise-config.xml.template /godata/config/cruise-config.xml
+fi
 
 # Check if the password file already exists to avoid re-hashing on container restarts
 if [ ! -f /godata/config/password.properties ]; then
   echo "Creating initial admin user and password file with BCrypt hash..."
-  
-  # Ensure the config directory exists before writing to it.
-  mkdir -p /godata/config
   
   # Use the standard 'htpasswd' utility to generate a BCrypt hash.
   hashed_password=$(htpasswd -nbB admin "${GOCD_ADMIN_PASSWORD}" | sed -e 's/admin://')
