@@ -23,14 +23,18 @@
       </admins>
     </security>
   </server>
+
   <pipelines group="defaultGroup">
     <pipeline name="badminton_court">
       <materials>
-        <git url="__GIT_REPO_URL_WITH_CREDENTIALS__" />
+        <git url="__GIT_REPO_URL_WITH_CREDENTIALS__" branch="master" />
       </materials>
       <stage name="build">
         <jobs>
           <job name="build_job">
+            <resources>
+              <resource>docker</resource>
+            </resources>
             <tasks>
               <exec command="echo">
                 <arg>Placeholder pipeline is running</arg>

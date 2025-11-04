@@ -1,11 +1,12 @@
-# Scripts/go.ps1
-
 Write-Host "Running Scripts/go.ps1..."
-Write-Host "Stopping and removing containers..."
-docker-compose down
 
-Write-Host "Forcefully removing the corrupted Docker volume by name..."
-docker volume rm gocd-server_gocd_data
+if (-Not (Test-Path "./certs/ca.crt")) {
+    Write-Host "Certificates not found. Generating..."
+    Scripts/generate-certs.ps1
+}
+
+Write-Host "Stopping and removing containers and volumes..."
+docker-compose down -v
 
 Write-Host "Rebuilding the image from scratch..."
 docker-compose build --no-cache

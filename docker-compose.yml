@@ -1,4 +1,5 @@
 # docker-compose.yml
+
 services:
   gocd-server:
     build: .
@@ -8,20 +9,22 @@ services:
       - "8153:8153"
       - "8154:8154"
     env_file:
-      - .env.docker 
+      - .env.docker
     volumes:
       - gocd_data:/godata
       - gocd_home:/home/go
+      - ./certs/server.crt:/etc/go/server/server.crt:ro
+      - ./certs/server.key:/etc/go/server/server.key:ro
 
   gocd-agent:
-    image: gocd/gocd-agent-alpine:v25.3.0
-    container_name: gocd-agent
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
     restart: unless-stopped
     environment:
       - GO_SERVER_URL=https://gocd-server:8154/go
       - AGENT_AUTO_REGISTER_KEY=default
       - AGENT_AUTO_REGISTER_RESOURCES=docker,linux
-      - AGENT_AUTO_REGISTER_HOSTNAME=agent-1
     depends_on:
       - gocd-server
 

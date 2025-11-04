@@ -1,0 +1,20 @@
+# Dockerfile.agent
+FROM gocd/gocd-agent-alpine:v25.3.0
+
+USER root
+
+# Install ca-certificates package so update-ca-certificates exists
+RUN apk add --no-cache ca-certificates
+
+# Copy CA cert into trust store
+COPY certs/ca.crt /usr/local/share/ca-certificates/ca.crt
+
+# Update trust store
+RUN update-ca-certificates
+
+# Copy agent entrypoint to set hostname dynamically
+COPY Scripts/agent-entrypoint.sh /usr/local/bin/agent-entrypoint.sh
+RUN chmod +x /usr/local/bin/agent-entrypoint.sh
+
+USER go
+ENTRYPOINT ["agent-entrypoint.sh"]
