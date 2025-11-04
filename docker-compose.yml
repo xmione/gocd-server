@@ -13,6 +13,18 @@ services:
       - gocd_data:/godata
       - gocd_home:/home/go
 
+  gocd-agent:
+    image: gocd/gocd-agent-alpine:v25.3.0
+    container_name: gocd-agent
+    restart: unless-stopped
+    environment:
+      - GO_SERVER_URL=https://gocd-server:8154/go
+      - AGENT_AUTO_REGISTER_KEY=default
+      - AGENT_AUTO_REGISTER_RESOURCES=docker,linux
+      - AGENT_AUTO_REGISTER_HOSTNAME=agent-1
+    depends_on:
+      - gocd-server
+
 volumes:
   gocd_data:
   gocd_home:

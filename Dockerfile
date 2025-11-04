@@ -6,6 +6,9 @@ USER root
 RUN apk add --no-cache curl apache2-utils bash
 USER go
 
+# Explicitly disable git credential helper to allow cloning of public repos
+RUN git config --global credential.helper ""
+
 # Copy the config file to a temporary staging location.
 # This prevents conflicts with the volume mount.
 COPY --chown=go:go config/cruise-config.xml /tmp/cruise-config.xml.template
