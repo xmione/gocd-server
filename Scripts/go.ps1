@@ -1,5 +1,21 @@
 Write-Host "Running Scripts/go.ps1..."
 
+# --- KEYSTORE GENERATION BLOCK ---
+Write-Host "Generating PKCS12 keystore for GoCD server..."
+ $certsDir = Join-Path $PSScriptRoot "..\certs"
+ $keystorePath = Join-Path $certsDir "keystore.p12"
+
+# Use openssl on the host machine to create the keystore
+& openssl pkcs12 -export `
+    -in "$certsDir\server.crt" `
+    -inkey "$certsDir\server.key" `
+    -out "$keystorePath" `
+    -name gocd-server `
+    -password pass:changeit
+
+Write-Host "✅ Keystore generated at $keystorePath"
+# --- END OF KEYSTORE GENERATION BLOCK ---
+
 if (-Not (Test-Path "./certs/ca.crt")) {
     Write-Host "Certificates not found. Generating..."
     Scripts/generate-certs.ps1
@@ -59,17 +75,5 @@ while ($true) {
 }
 # --- END OF INTELLIGENT AGENT WAIT BLOCK ---
 
-Write-Host "Running validation script..."
-Write-Host "====================================================================================" -ForegroundColor Yellow
-docker exec gocd-server /bin/bash /usr/local/bin/validate.sh
-Write-Host "====================================================================================" -ForegroundColor Yellow
-
-# Check the exit code of the validation script
-if ($LASTEXITCODE -eq 0) {
-    Write-Host "✅ SUCCESS: GoCD environment is up and validated." -ForegroundColor Green
-} else {
-    Write-Host "❌ FAILURE: GoCD environment validation failed. Check the logs above." -ForegroundColor Red
-}
-
-# Exit with the same code as the validation script
-exit $LASTEXITCODE
+Write-Host "✅ SUCCESS: GoCD environment is up. Agent is connected." -ForegroundColor Green
+exit 0

@@ -1,7 +1,6 @@
 <!-- config/cruise-config.xml -->
 <cruise schemaVersion="139">
-  <!-- The serverId attribute is removed to allow GoCD to auto-generate it on first run -->
-  <server agentAutoRegisterKey="default">
+  <server agentAutoRegisterKey="default" serverId="__SERVER_ID__" tokenGenerationKey="__TOKEN_GENERATION_KEY__">
     <security>
       <authConfigs>
         <authConfig id="password_file" pluginId="cd.go.authentication.passwordfile">

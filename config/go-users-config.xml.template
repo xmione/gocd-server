@@ -1,9 +1,0 @@
-<!-- config/go-users-config.xml.template -->
-<users>
-  <user login="admin" password="${GOCD_ADMIN_PASSWORD}">
-    <email>admin@example.com</email>
-    <roles>
-      <role name="gocd-system-administrators"/>
-    </roles>
-  </user>
-</users>

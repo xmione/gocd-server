@@ -1,8 +1,10 @@
 # docker-compose.yml
 
+# docker-compose.yml
+
 services:
   gocd-server:
-    build: .
+    build: . # Instructs Docker Compose to build the image from the Dockerfile in the current directory
     container_name: gocd-server
     restart: unless-stopped
     ports:
@@ -10,21 +12,37 @@ services:
       - "8154:8154"
     env_file:
       - .env.docker
+    environment:
+      # These variables are used by the base image's entrypoint to generate the config.
+      - GO_SERVER_SSL_PORT=8154
+      - GO_SERVER_SSL_CERTIFICATE=/etc/go/server/server.crt
+      - GO_SERVER_SSL_PRIVATE_KEY=/etc/go/server/server.key
     volumes:
       - gocd_data:/godata
       - gocd_home:/home/go
+      # Mount generated TLS certs for the server
       - ./certs/server.crt:/etc/go/server/server.crt:ro
       - ./certs/server.key:/etc/go/server/server.key:ro
+      # Mount your config file WITH PLACEHOLDERS into the container
+      - ./config/cruise-config.xml:/tmp/cruise-config.xml.template:ro
 
   gocd-agent:
     build:
       context: .
       dockerfile: Dockerfile.agent
+    container_name: gocd-agent
     restart: unless-stopped
     environment:
+      # --- ENSURE THIS IS HTTPS ---
       - GO_SERVER_URL=https://gocd-server:8154/go
       - AGENT_AUTO_REGISTER_KEY=default
       - AGENT_AUTO_REGISTER_RESOURCES=docker,linux
+      - AGENT_AUTO_REGISTER_HOSTNAME=agent-1
+      - AGENT_BOOTSTRAP_ARGS=-Dgo.agent.ssl.verify=false
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Mount the CA certificate for the agent to trust the server
+      - ./certs/ca.crt:/usr/local/share/ca-certificates/ca.crt:ro
     depends_on:
       - gocd-server
 
