@@ -29,18 +29,24 @@ if [ -f /usr/local/share/ca-certificates/ca.crt ] && [ -f "$KEYTOOL" ] && ! $KEY
     $KEYTOOL -importcert -noprompt -trustcacerts -alias gocd-ca -file /usr/local/share/ca-certificates/ca.crt -keystore $CACERTS -storepass changeit
 fi
 
-# Set Java to use the system trust store
-export JAVA_OPTS="-Djavax.net.ssl.trustStore=$CACERTS -Djavax.net.ssl.trustStorePassword=changeit -Djavax.net.ssl.trustStoreType=JKS -Dgo.agent.ssl.verify=true"
+# Check if SSL verification should be disabled
+SSL_VERIFY="true"
+if echo "$AGENT_BOOTSTRAP_ARGS" | grep -q "go.agent.ssl.verify=false"; then
+    SSL_VERIFY="false"
+fi
+
+# Set Java to use the system trust store with the correct SSL verification setting
+export JAVA_OPTS="-Djavax.net.ssl.trustStore=$CACERTS -Djavax.net.ssl.trustStorePassword=changeit -Djavax.net.ssl.trustStoreType=JKS -Dgo.agent.ssl.verify=$SSL_VERIFY"
 
 # --- WAIT FOR SERVER BLOCK ---
 echo "Waiting for GoCD server at ${GO_SERVER_URL} to be ready..."
-# --- CHANGE THIS LINE TO USE HTTP ---
-SERVER_URL=$(echo "$GO_SERVER_URL" | sed 's|https://|http://|' | sed 's|/go||')
+# Use port 8153 for health check since you confirmed it works with HTTP
+HEALTH_CHECK_URL="http://gocd-server:8153/go/api/v1/health"
 MAX_RETRIES=30
 RETRY_INTERVAL=10
 
 for i in $(seq 1 $MAX_RETRIES); do
-    if curl -f -s "$SERVER_URL/api/v1/health" > /dev/null; then
+    if curl -f -s "$HEALTH_CHECK_URL" > /dev/null; then
         echo "GoCD server is ready!"
         break
     else

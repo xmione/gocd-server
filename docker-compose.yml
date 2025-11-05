@@ -1,7 +1,5 @@
 # docker-compose.yml
 
-# docker-compose.yml
-
 services:
   gocd-server:
     build: . # Instructs Docker Compose to build the image from the Dockerfile in the current directory
@@ -23,6 +21,8 @@ services:
       # Mount generated TLS certs for the server
       - ./certs/server.crt:/etc/go/server/server.crt:ro
       - ./certs/server.key:/etc/go/server/server.key:ro
+      # Mount the keystore file that jetty.xml expects
+      - ./certs/keystore.p12:/tmp/keystore.p12:ro
       # Mount your config file WITH PLACEHOLDERS into the container
       - ./config/cruise-config.xml:/tmp/cruise-config.xml.template:ro
 
