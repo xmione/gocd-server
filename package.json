@@ -6,6 +6,7 @@
   "scripts": {
     "go" : "echo 'Recreating docker containers...' && powershell -ExecutionPolicy Bypass -File Scripts\\go.ps1 ",
     "geterror" : "echo 'Getting docker container errors...' && powershell -ExecutionPolicy Bypass -File Scripts\\geterror.ps1 ",
+    "validate": "echo 'Validating GoCD environment...' && powershell -ExecutionPolicy Bypass -File Scripts\\validate.ps1",
     "test": "echo 'Error: no test specified' && exit 1"
   },
   "repository": {
