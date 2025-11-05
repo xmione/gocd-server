@@ -3,8 +3,11 @@ FROM gocd/gocd-agent-alpine:v25.3.0
 
 USER root
 
-# Install ca-certificates and ensure writable certs directory
-RUN apk add --no-cache ca-certificates openssl curl
+# Install ca-certificates, docker CLI, and other dependencies
+RUN apk add --no-cache ca-certificates openssl curl docker
+
+# Install docker-compose plugin
+RUN apk add --no-cache docker-compose
 
 # Add a custom entrypoint script to ensure proper agent registration
 COPY Scripts/agent-entrypoint.sh /usr/local/bin/agent-entrypoint.sh

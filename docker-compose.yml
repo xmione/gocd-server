@@ -25,6 +25,8 @@ services:
       - ./certs/keystore.p12:/tmp/keystore.p12:ro
       # Mount your config file WITH PLACEHOLDERS into the container
       - ./config/cruise-config.xml:/tmp/cruise-config.xml.template:ro
+      # Mount Docker socket for building and running containers
+      - /var/run/docker.sock:/var/run/docker.sock
 
   gocd-agent:
     build:
@@ -43,6 +45,9 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       # Mount the CA certificate for the agent to trust the server
       - ./certs/ca.crt:/usr/local/share/ca-certificates/ca.crt:ro
+      # Mount the badminton_court directory and its .env.docker file
+      - ../badminton_court:/badminton_court:ro
+      - ../badminton_court/.env.docker:/badminton_court/.env.docker:ro
     depends_on:
       - gocd-server
 

@@ -35,8 +35,41 @@
               <resource>docker</resource>
             </resources>
             <tasks>
-              <exec command="echo">
-                <arg>Placeholder pipeline is running</arg>
+              <!-- Stop any existing containers -->
+              <exec command="docker-compose">
+                <arg>-f</arg>
+                <arg>/badminton_court/docker-compose.yml</arg>
+                <arg>--env-file</arg>
+                <arg>/badminton_court/.env.docker</arg>
+                <arg>-p</arg>
+                <arg>badminton-court</arg>
+                <arg>down</arg>
+              </exec>
+              <!-- Build and start the services -->
+              <exec command="docker-compose">
+                <arg>-f</arg>
+                <arg>/badminton_court/docker-compose.yml</arg>
+                <arg>--env-file</arg>
+                <arg>/badminton_court/.env.docker</arg>
+                <arg>--profile</arg>
+                <arg>dev</arg>
+                <arg>-p</arg>
+                <arg>badminton-court</arg>
+                <arg>up</arg>
+                <arg>-d</arg>
+                <arg>--build</arg>
+              </exec>
+              <!-- Show service status -->
+              <exec command="docker-compose">
+                <arg>-f</arg>
+                <arg>/badminton_court/docker-compose.yml</arg>
+                <arg>--env-file</arg>
+                <arg>/badminton_court/.env.docker</arg>
+                <arg>--profile</arg>
+                <arg>dev</arg>
+                <arg>-p</arg>
+                <arg>badminton-court</arg>
+                <arg>ps</arg>
               </exec>
             </tasks>
           </job>
