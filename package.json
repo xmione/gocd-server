@@ -1,0 +1,26 @@
+{
+  "name": "gocd-server",
+  "version": "1.0.0",
+  "description": "Automates the creation of a GOCD Docker Container.",
+  "main": "index.js",
+  "scripts": {
+    "go" : "echo 'Recreating docker containers...' && powershell -ExecutionPolicy Bypass -File Scripts\\go.ps1 ",
+    "geterror" : "echo 'Getting docker container errors...' && powershell -ExecutionPolicy Bypass -File Scripts\\geterror.ps1 ",
+    "test": "echo 'Error: no test specified' && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xmione/gocd-server.git"
+  },
+  "keywords": [
+    "gocd",
+    "docker",
+    "container"
+  ],
+  "author": "Solomio S. Sisante",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/xmione/gocd-server/issues"
+  },
+  "homepage": "https://github.com/xmione/gocd-server#readme"
+}
