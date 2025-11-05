@@ -29,24 +29,28 @@ if [ -f /usr/local/share/ca-certificates/ca.crt ] && [ -f "$KEYTOOL" ] && ! $KEY
     $KEYTOOL -importcert -noprompt -trustcacerts -alias gocd-ca -file /usr/local/share/ca-certificates/ca.crt -keystore $CACERTS -storepass changeit
 fi
 
-# Check if SSL verification should be disabled
-SSL_VERIFY="true"
-if echo "$AGENT_BOOTSTRAP_ARGS" | grep -q "go.agent.ssl.verify=false"; then
-    SSL_VERIFY="false"
-fi
-
-# Set Java to use the system trust store with the correct SSL verification setting
-export JAVA_OPTS="-Djavax.net.ssl.trustStore=$CACERTS -Djavax.net.ssl.trustStorePassword=changeit -Djavax.net.ssl.trustStoreType=JKS -Dgo.agent.ssl.verify=$SSL_VERIFY"
+# Set Java to use the system trust store
+export JAVA_OPTS="-Djavax.net.ssl.trustStore=$CACERTS -Djavax.net.ssl.trustStorePassword=changeit -Djavax.net.ssl.trustStoreType=JKS"
 
 # --- WAIT FOR SERVER BLOCK ---
 echo "Waiting for GoCD server at ${GO_SERVER_URL} to be ready..."
-# Use port 8153 for health check since you confirmed it works with HTTP
-HEALTH_CHECK_URL="http://gocd-server:8153/go/api/v1/health"
+
+# Get the IP address of the gocd-server container
+SERVER_IP=$(getent hosts gocd-server | awk '{print $1}')
+if [ -z "$SERVER_IP" ]; then
+    echo "Could not resolve gocd-server hostname, using default network gateway"
+    SERVER_IP=$(ip route | awk '/default/ { print $3}')
+fi
+
+# Use the IP address directly for the health check
+SERVER_URL="http://${SERVER_IP}:8153"
+echo "Using server IP: $SERVER_URL"
+
 MAX_RETRIES=30
 RETRY_INTERVAL=10
 
 for i in $(seq 1 $MAX_RETRIES); do
-    if curl -f -s "$HEALTH_CHECK_URL" > /dev/null; then
+    if curl -f -s "$SERVER_URL/go/api/v1/health" > /dev/null; then
         echo "GoCD server is ready!"
         break
     else

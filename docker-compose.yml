@@ -33,8 +33,8 @@ services:
     container_name: gocd-agent
     restart: unless-stopped
     environment:
-      # --- ENSURE THIS IS HTTPS ---
-      - GO_SERVER_URL=https://gocd-server:8154/go
+      # --- USE PORT 8153 INSTEAD OF 8154 ---
+      - GO_SERVER_URL=http://gocd-server:8153/go
       - AGENT_AUTO_REGISTER_KEY=default
       - AGENT_AUTO_REGISTER_RESOURCES=docker,linux
       - AGENT_AUTO_REGISTER_HOSTNAME=agent-1
