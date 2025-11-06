@@ -45,7 +45,25 @@
                 <arg>badminton-court</arg>
                 <arg>down</arg>
               </exec>
-              <!-- Build and start the services -->
+              <!-- Build all service images without cache -->
+              <exec command="docker-compose">
+                <arg>-f</arg>
+                <arg>/badminton_court/docker-compose.yml</arg>
+                <arg>--env-file</arg>
+                <arg>/badminton_court/.env.docker</arg>
+                <arg>--profile</arg>
+                <arg>dev</arg>
+                <arg>--profile</arg>
+                <arg>test</arg>
+                <arg>--profile</arg>
+                <arg>tunnel</arg>
+                <arg>--profile</arg>
+                <arg>presentation</arg>
+                <arg>--progress=plain</arg>
+                <arg>build</arg>
+                <arg>--no-cache</arg>
+              </exec>
+              <!-- Force recreate dev containers -->
               <exec command="docker-compose">
                 <arg>-f</arg>
                 <arg>/badminton_court/docker-compose.yml</arg>
@@ -57,7 +75,7 @@
                 <arg>badminton-court</arg>
                 <arg>up</arg>
                 <arg>-d</arg>
-                <arg>--build</arg>
+                <arg>--force-recreate</arg>
               </exec>
               <!-- Show service status -->
               <exec command="docker-compose">
