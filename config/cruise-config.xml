@@ -24,6 +24,7 @@
   </server>
 
   <pipelines group="defaultGroup">
+    <!-- Existing badminton_court pipeline -->
     <pipeline name="badminton_court">
       <materials>
         <git url="__GIT_REPO_URL_WITH_CREDENTIALS__" branch="master" />
@@ -88,6 +89,62 @@
                 <arg>-p</arg>
                 <arg>badminton-court</arg>
                 <arg>ps</arg>
+              </exec>
+            </tasks>
+          </job>
+        </jobs>
+      </stage>
+    </pipeline>
+    
+    <!-- pearl-hello-world pipeline -->
+    <pipeline name="pearl-hello-world">
+      <materials>
+        <git url="__GIT_REPO_URL_WITH_CREDENTIALS__" branch="master" />
+      </materials>
+      <stage name="build">
+        <jobs>
+          <job name="build_job">
+            <resources>
+              <resource>docker</resource>
+            </resources>
+            <tasks>
+              <!-- Stop and remove existing container -->
+              <exec command="docker">
+                <arg>stop</arg>
+                <arg>pearl-hello-world</arg>
+                <arg>||</arg>
+                <arg>true</arg>
+              </exec>
+              <exec command="docker">
+                <arg>rm</arg>
+                <arg>pearl-hello-world</arg>
+                <arg>||</arg>
+                <arg>true</arg>
+              </exec>
+              <!-- Build new image -->
+              <exec command="docker">
+                <arg>build</arg>
+                <arg>-t</arg>
+                <arg>pearl-hello-world</arg>
+                <arg>.</arg>
+              </exec>
+              <!-- Run container -->
+              <exec command="docker">
+                <arg>run</arg>
+                <arg>-d</arg>
+                <arg>--name</arg>
+                <arg>pearl-hello-world</arg>
+                <arg>-p</arg>
+                <arg>9292:9292</arg>
+                <arg>pearl-hello-world</arg>
+              </exec>
+              <!-- Health check -->
+              <exec command="sleep">
+                <arg>10</arg>
+              </exec>
+              <exec command="curl">
+                <arg>-f</arg>
+                <arg>http://localhost:9292/health</arg>
               </exec>
             </tasks>
           </job>
