@@ -23,7 +23,6 @@ services:
       - ./config/cruise-config.xml:/tmp/cruise-config.xml.template:ro
       - /var/run/docker.sock:/var/run/docker.sock
 
-
   gocd-agent-1:
     build:
       context: .
@@ -40,8 +39,10 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./certs/ca.crt:/usr/local/share/ca-certificates/ca.crt:ro
       - ../badminton_court:/badminton_court:rw
-      # Mount the certs directory for the badminton_court project
+      - ../pearl-hello-world:/pearl-hello-world:rw
+      # Mount the certs directory for both projects
       - ./certs:/badminton_court/certs:ro
+      - ./certs:/pearl-hello-world/certs:ro
     depends_on:
       - gocd-server
 
@@ -60,8 +61,10 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./certs/ca.crt:/usr/local/share/ca-certificates/ca.crt:ro
+      - ../badminton_court:/badminton_court:rw
       - ../pearl-hello-world:/pearl-hello-world:rw
-      # Mount the certs directory for the pearl-hello-world project
+      # Mount the certs directory for both projects
+      - ./certs:/badminton_court/certs:ro
       - ./certs:/pearl-hello-world/certs:ro
     depends_on:
       - gocd-server
