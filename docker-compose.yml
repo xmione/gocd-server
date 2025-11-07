@@ -1,8 +1,8 @@
-# docker-compose.yml
+# gocd-server/docker-compose.yml
 
 services:
   gocd-server:
-    build: . # Instructs Docker Compose to build the image from the Dockerfile in the current directory
+    build: .
     container_name: gocd-server
     restart: unless-stopped
     ports:
@@ -11,31 +11,26 @@ services:
     env_file:
       - .env.docker
     environment:
-      # These variables are used by the base image's entrypoint to generate the config.
       - GO_SERVER_SSL_PORT=8154
       - GO_SERVER_SSL_CERTIFICATE=/etc/go/server/server.crt
       - GO_SERVER_SSL_PRIVATE_KEY=/etc/go/server/server.key
     volumes:
       - gocd_data:/godata
       - gocd_home:/home/go
-      # Mount generated TLS certs for the server
       - ./certs/server.crt:/etc/go/server/server.crt:ro
       - ./certs/server.key:/etc/go/server/server.key:ro
-      # Mount the keystore file that jetty.xml expects
       - ./certs/keystore.p12:/tmp/keystore.p12:ro
-      # Mount your config file WITH PLACEHOLDERS into the container
       - ./config/cruise-config.xml:/tmp/cruise-config.xml.template:ro
-      # Mount Docker socket for building and running containers
       - /var/run/docker.sock:/var/run/docker.sock
 
-  gocd-agent:
+
+  gocd-agent-1:
     build:
       context: .
       dockerfile: Dockerfile.agent
-    container_name: gocd-agent
+    container_name: gocd-agent-1
     restart: unless-stopped
     environment:
-      # --- USE PORT 8153 INSTEAD OF 8154 ---
       - GO_SERVER_URL=http://gocd-server:8153/go
       - AGENT_AUTO_REGISTER_KEY=default
       - AGENT_AUTO_REGISTER_RESOURCES=docker,linux
@@ -43,11 +38,31 @@ services:
       - AGENT_BOOTSTRAP_ARGS=-Dgo.agent.ssl.verify=false
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      # Mount the CA certificate for the agent to trust the server
       - ./certs/ca.crt:/usr/local/share/ca-certificates/ca.crt:ro
-      # Mount the badminton_court directory and its .env.docker file
-      - ../badminton_court:/badminton_court:ro
-      - ../badminton_court/.env.docker:/badminton_court/.env.docker:ro
+      - ../badminton_court:/badminton_court:rw
+      # Mount the certs directory for the badminton_court project
+      - ./certs:/badminton_court/certs:ro
+    depends_on:
+      - gocd-server
+
+  gocd-agent-2:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    container_name: gocd-agent-2
+    restart: unless-stopped
+    environment:
+      - GO_SERVER_URL=http://gocd-server:8153/go
+      - AGENT_AUTO_REGISTER_KEY=default
+      - AGENT_AUTO_REGISTER_RESOURCES=docker,linux
+      - AGENT_AUTO_REGISTER_HOSTNAME=agent-2
+      - AGENT_BOOTSTRAP_ARGS=-Dgo.agent.ssl.verify=false
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./certs/ca.crt:/usr/local/share/ca-certificates/ca.crt:ro
+      - ../pearl-hello-world:/pearl-hello-world:rw
+      # Mount the certs directory for the pearl-hello-world project
+      - ./certs:/pearl-hello-world/certs:ro
     depends_on:
       - gocd-server
 
