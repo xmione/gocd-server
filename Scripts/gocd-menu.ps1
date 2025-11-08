@@ -30,6 +30,7 @@ do {
     Write-Host "   4.1. Open GoCD web interface" -ForegroundColor White
     Write-Host "   4.2. View system resources" -ForegroundColor White
     Write-Host "   4.3. Clean up Docker resources" -ForegroundColor White
+    Write-Host "   4.4. Print Project Folder Structure" -ForegroundColor White
     Write-Host ""
     Write-Host "5. Exit" -ForegroundColor Red
     Write-Host ""
@@ -175,6 +176,11 @@ do {
             Write-Host "Cleaning up Docker resources..." -ForegroundColor Yellow
             docker system prune -f
             Write-Host "Cleanup completed." -ForegroundColor Green
+            Write-Host "Press Enter to continue..." -ForegroundColor Yellow
+            Read-Host
+        }
+        "4.4" { 
+            pnpm run pfs
             Write-Host "Press Enter to continue..." -ForegroundColor Yellow
             Read-Host
         }

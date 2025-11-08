@@ -8,6 +8,7 @@
     "geterror" : "echo 'Getting docker container errors...' && powershell -ExecutionPolicy Bypass -File Scripts\\geterror.ps1 ",
     "validate": "echo 'Validating GoCD environment...' && powershell -ExecutionPolicy Bypass -File Scripts\\validate.ps1",
     "menu": "echo 'Opening GoCD management menu...' && powershell -ExecutionPolicy Bypass -File Scripts\\gocd-menu.ps1",
+    "pfs": "echo 'Print the Project Folder Structure..' && powershell -ExecutionPolicy Bypass -Command \". .\\Scripts\\pfs.ps1\"",
     "test": "echo 'Error: no test specified' && exit 1"
   },
   "repository": {
