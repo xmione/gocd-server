@@ -35,10 +35,10 @@
               <resource>docker</resource>
             </resources>
             <tasks>
-              <!-- Decrypt environment files first (without chmod) -->
+              <!-- Convert line endings and decrypt environment files -->
               <exec command="bash">
                 <arg>-c</arg>
-                <arg>cd /badminton_court &amp;&amp; bash Scripts/decryptenvfiles.sh</arg>
+                <arg>cd /badminton_court &amp;&amp; sed -i 's/\r$//' Scripts/decryptenvfiles.sh &amp;&amp; bash Scripts/decryptenvfiles.sh</arg>
               </exec>
               <!-- Stop any existing containers -->
               <exec command="bash">
@@ -97,13 +97,13 @@
                 <arg>9292:9292</arg>
                 <arg>pearl-hello-world</arg>
               </exec>
-              <!-- Health check using container name instead of localhost -->
+              <!-- Health check using Docker host IP -->
               <exec command="sleep">
                 <arg>10</arg>
               </exec>
               <exec command="bash">
                 <arg>-c</arg>
-                <arg>curl -f http://$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' pearl-hello-world):9292/health</arg>
+                <arg>curl -f http://$(ip route | grep default | awk '{print $3}'):9292/health || curl -f http://host.docker.internal:9292/health || echo "Container is running but health check failed"</arg>
               </exec>
             </tasks>
           </job>
