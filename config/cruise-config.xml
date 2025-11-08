@@ -1,4 +1,5 @@
 <!-- config/cruise-config.xml -->
+<!-- config/cruise-config.xml -->
 <cruise schemaVersion="139">
   <server agentAutoRegisterKey="default" serverId="__SERVER_ID__" tokenGenerationKey="__TOKEN_GENERATION_KEY__">
     <security>
@@ -35,11 +36,27 @@
               <resource>docker</resource>
             </resources>
             <tasks>
-              <!-- Debug task to verify directory and files -->
+              <!-- PROVEN CLEANUP BLOCK -->
               <exec command="bash">
                 <arg>-c</arg>
-                <arg>cd /badminton_court &amp;&amp; pwd &amp;&amp; ls -la | grep manage.py</arg>
+                <arg>
+                  echo "========================================================" &amp;&amp;
+                  echo "AGGRESSIVE CLEANUP OF badminton-court" &amp;&amp;
+                  echo "========================================================" &amp;&amp;
+                  echo "Forcefully removing specific containers by name..." &amp;&amp;
+                  docker rm -f web-dev || echo "Container 'web-dev' not found." &amp;&amp;
+                  docker rm -f db || echo "Container 'db' not found." &amp;&amp;
+                  docker rm -f mail-test || echo "Container 'mail-test' not found." &amp;&amp;
+                  docker rm -f redis || echo "Container 'redis' not found." &amp;&amp;
+                  echo "Running docker-compose down to clean up networks, volumes, etc..." &amp;&amp;
+                  cd /badminton_court &amp;&amp;
+                  docker-compose -f docker-compose.yml --env-file .env.docker -p badminton-court down -v --remove-orphans || echo "docker-compose down had issues, but continuing." &amp;&amp;
+                  echo "Pruning dangling images..." &amp;&amp;
+                  docker image prune -f
+                </arg>
               </exec>
+
+              <!-- ORIGINAL TASKS -->
               <!-- Convert line endings and decrypt environment files -->
               <exec command="bash">
                 <arg>-c</arg>
@@ -82,15 +99,24 @@
               <resource>docker</resource>
             </resources>
             <tasks>
+              <!-- PROVEN CLEANUP BLOCK -->
+              <exec command="bash">
+                <arg>-c</arg>
+                <arg>
+                  echo "========================================================" &amp;&amp;
+                  echo "CLEANING UP pearl-hello-world" &amp;&amp;
+                  echo "========================================================" &amp;&amp;
+                  docker rm -f pearl-hello-world || echo "Container 'pearl-hello-world' not found." &amp;&amp;
+                  docker rmi -f pearl-hello-world || echo "Image 'pearl-hello-world' not found." &amp;&amp;
+                  docker image prune -f
+                </arg>
+              </exec>
+
+              <!-- ORIGINAL TASKS -->
               <!-- Debug task to verify directory -->
               <exec command="bash">
                 <arg>-c</arg>
                 <arg>cd /pearl-hello-world &amp;&amp; pwd &amp;&amp; ls -la</arg>
-              </exec>
-              <!-- Stop and remove existing container -->
-              <exec command="bash">
-                <arg>-c</arg>
-                <arg>docker stop pearl-hello-world || true &amp;&amp; docker rm pearl-hello-world || true</arg>
               </exec>
               <!-- Build new image from the correct directory -->
               <exec command="bash">
