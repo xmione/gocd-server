@@ -35,6 +35,11 @@
               <resource>docker</resource>
             </resources>
             <tasks>
+              <!-- Debug task to verify directory and files -->
+              <exec command="bash">
+                <arg>-c</arg>
+                <arg>cd /badminton_court &amp;&amp; pwd &amp;&amp; ls -la | grep manage.py</arg>
+              </exec>
               <!-- Convert line endings and decrypt environment files -->
               <exec command="bash">
                 <arg>-c</arg>
@@ -77,6 +82,11 @@
               <resource>docker</resource>
             </resources>
             <tasks>
+              <!-- Debug task to verify directory -->
+              <exec command="bash">
+                <arg>-c</arg>
+                <arg>cd /pearl-hello-world &amp;&amp; pwd &amp;&amp; ls -la</arg>
+              </exec>
               <!-- Stop and remove existing container -->
               <exec command="bash">
                 <arg>-c</arg>

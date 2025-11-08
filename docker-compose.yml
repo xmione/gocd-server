@@ -40,9 +40,7 @@ services:
       - ./certs/ca.crt:/usr/local/share/ca-certificates/ca.crt:ro
       - ../badminton_court:/badminton_court:rw
       - ../pearl-hello-world:/pearl-hello-world:rw
-      # Mount the certs directory for both projects
-      - ./certs:/badminton_court/certs:ro
-      - ./certs:/pearl-hello-world/certs:ro
+      - ./certs:/certs:ro
     depends_on:
       - gocd-server
 
@@ -63,12 +61,10 @@ services:
       - ./certs/ca.crt:/usr/local/share/ca-certificates/ca.crt:ro
       - ../badminton_court:/badminton_court:rw
       - ../pearl-hello-world:/pearl-hello-world:rw
-      # Mount the certs directory for both projects
-      - ./certs:/badminton_court/certs:ro
-      - ./certs:/pearl-hello-world/certs:ro
+      - ./certs:/certs:ro
     depends_on:
       - gocd-server
-
+      
 volumes:
   gocd_data:
   gocd_home:
