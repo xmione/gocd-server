@@ -1,5 +1,4 @@
 <!-- config/cruise-config.xml -->
-<!-- config/cruise-config.xml -->
 <cruise schemaVersion="139">
   <server agentAutoRegisterKey="default" serverId="__SERVER_ID__" tokenGenerationKey="__TOKEN_GENERATION_KEY__">
     <security>
@@ -25,6 +24,66 @@
   </server>
 
   <pipelines group="defaultGroup">
+
+    <pipeline name="pearl-hello-world">
+      <materials>
+        <git url="__GIT_REPO_URL_WITH_CREDENTIALS__" branch="master" />
+      </materials>
+      <stage name="build">
+        <jobs>
+          <job name="build_job">
+            <resources>
+              <resource>docker</resource>
+            </resources>
+            <tasks>
+              <!-- PROVEN CLEANUP BLOCK -->
+              <exec command="bash">
+                <arg>-c</arg>
+                <arg>
+                  echo "========================================================" &amp;&amp;
+                  echo "CLEANING UP pearl-hello-world" &amp;&amp;
+                  echo "========================================================" &amp;&amp;
+                  docker rm -f pearl-hello-world || echo "Container 'pearl-hello-world' not found." &amp;&amp;
+                  docker rmi -f pearl-hello-world || echo "Image 'pearl-hello-world' not found." &amp;&amp;
+                  docker image prune -f
+                </arg>
+              </exec>
+
+              <!-- ORIGINAL TASKS -->
+              <!-- Debug task to verify directory -->
+              <exec command="bash">
+                <arg>-c</arg>
+                <arg>cd /pearl-hello-world &amp;&amp; pwd &amp;&amp; ls -la</arg>
+              </exec>
+              <!-- Build new image from the correct directory -->
+              <exec command="bash">
+                <arg>-c</arg>
+                <arg>cd /pearl-hello-world &amp;&amp; docker build -t pearl-hello-world .</arg>
+              </exec>
+              <!-- Run container -->
+              <exec command="docker">
+                <arg>run</arg>
+                <arg>-d</arg>
+                <arg>--name</arg>
+                <arg>pearl-hello-world</arg>
+                <arg>-p</arg>
+                <arg>9292:9292</arg>
+                <arg>pearl-hello-world</arg>
+              </exec>
+              <!-- Health check using Docker host IP -->
+              <exec command="sleep">
+                <arg>10</arg>
+              </exec>
+              <exec command="bash">
+                <arg>-c</arg>
+                <arg>curl -f http://$(ip route | grep default | awk '{print $3}'):9292/health || curl -f http://host.docker.internal:9292/health || echo "Container is running but health check failed"</arg>
+              </exec>
+            </tasks>
+          </job>
+        </jobs>
+      </stage>
+    </pipeline>
+      
     <pipeline name="badminton_court">
       <materials>
         <git url="__GIT_REPO_URL_WITH_CREDENTIALS__" branch="master" />
@@ -169,63 +228,5 @@
       </stage>
     </pipeline>
 
-    <pipeline name="pearl-hello-world">
-      <materials>
-        <git url="__GIT_REPO_URL_WITH_CREDENTIALS__" branch="master" />
-      </materials>
-      <stage name="build">
-        <jobs>
-          <job name="build_job">
-            <resources>
-              <resource>docker</resource>
-            </resources>
-            <tasks>
-              <!-- PROVEN CLEANUP BLOCK -->
-              <exec command="bash">
-                <arg>-c</arg>
-                <arg>
-                  echo "========================================================" &amp;&amp;
-                  echo "CLEANING UP pearl-hello-world" &amp;&amp;
-                  echo "========================================================" &amp;&amp;
-                  docker rm -f pearl-hello-world || echo "Container 'pearl-hello-world' not found." &amp;&amp;
-                  docker rmi -f pearl-hello-world || echo "Image 'pearl-hello-world' not found." &amp;&amp;
-                  docker image prune -f
-                </arg>
-              </exec>
-
-              <!-- ORIGINAL TASKS -->
-              <!-- Debug task to verify directory -->
-              <exec command="bash">
-                <arg>-c</arg>
-                <arg>cd /pearl-hello-world &amp;&amp; pwd &amp;&amp; ls -la</arg>
-              </exec>
-              <!-- Build new image from the correct directory -->
-              <exec command="bash">
-                <arg>-c</arg>
-                <arg>cd /pearl-hello-world &amp;&amp; docker build -t pearl-hello-world .</arg>
-              </exec>
-              <!-- Run container -->
-              <exec command="docker">
-                <arg>run</arg>
-                <arg>-d</arg>
-                <arg>--name</arg>
-                <arg>pearl-hello-world</arg>
-                <arg>-p</arg>
-                <arg>9292:9292</arg>
-                <arg>pearl-hello-world</arg>
-              </exec>
-              <!-- Health check using Docker host IP -->
-              <exec command="sleep">
-                <arg>10</arg>
-              </exec>
-              <exec command="bash">
-                <arg>-c</arg>
-                <arg>curl -f http://$(ip route | grep default | awk '{print $3}'):9292/health || curl -f http://host.docker.internal:9292/health || echo "Container is running but health check failed"</arg>
-              </exec>
-            </tasks>
-          </job>
-        </jobs>
-      </stage>
-    </pipeline>
   </pipelines>
 </cruise>
