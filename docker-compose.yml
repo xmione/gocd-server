@@ -32,7 +32,7 @@ services:
     environment:
       - GO_SERVER_URL=http://gocd-server:8153/go
       - AGENT_AUTO_REGISTER_KEY=default
-      - AGENT_AUTO_REGISTER_RESOURCES=docker,linux
+      - AGENT_AUTO_REGISTER_RESOURCES=docker,linux,pearl-hello-world
       - AGENT_AUTO_REGISTER_HOSTNAME=agent-1
       - AGENT_BOOTSTRAP_ARGS=-Dgo.agent.ssl.verify=false
     volumes:
@@ -52,7 +52,7 @@ services:
     environment:
       - GO_SERVER_URL=http://gocd-server:8153/go
       - AGENT_AUTO_REGISTER_KEY=default
-      - AGENT_AUTO_REGISTER_RESOURCES=docker,linux
+      - AGENT_AUTO_REGISTER_RESOURCES=docker,linux,badminton_court
       - AGENT_AUTO_REGISTER_HOSTNAME=agent-2
       - AGENT_BOOTSTRAP_ARGS=-Dgo.agent.ssl.verify=false
     volumes:
@@ -62,67 +62,7 @@ services:
       - ./certs:/certs:ro
     depends_on:
       - gocd-server
-  
-  gocd-agent-3:
-    build:
-      context: .
-      dockerfile: Dockerfile.agent
-    container_name: gocd-agent-3
-    restart: unless-stopped
-    environment:
-      - GO_SERVER_URL=http://gocd-server:8153/go
-      - AGENT_AUTO_REGISTER_KEY=default
-      - AGENT_AUTO_REGISTER_RESOURCES=docker,linux
-      - AGENT_AUTO_REGISTER_HOSTNAME=agent-3
-      - AGENT_BOOTSTRAP_ARGS=-Dgo.agent.ssl.verify=false
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./certs/ca.crt:/usr/local/share/ca-certificates/ca.crt:ro
-      - ../badminton_court:/badminton_court:rw
-      - ./certs:/certs:ro
-    depends_on:
-      - gocd-server
-  
-  gocd-agent-4:
-    build:
-      context: .
-      dockerfile: Dockerfile.agent
-    container_name: gocd-agent-4
-    restart: unless-stopped
-    environment:
-      - GO_SERVER_URL=http://gocd-server:8153/go
-      - AGENT_AUTO_REGISTER_KEY=default
-      - AGENT_AUTO_REGISTER_RESOURCES=docker,linux
-      - AGENT_AUTO_REGISTER_HOSTNAME=agent-4
-      - AGENT_BOOTSTRAP_ARGS=-Dgo.agent.ssl.verify=false
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./certs/ca.crt:/usr/local/share/ca-certificates/ca.crt:ro
-      - ../badminton_court:/badminton_court:rw
-      - ./certs:/certs:ro
-    depends_on:
-      - gocd-server
-  
-  gocd-agent-5:
-    build:
-      context: .
-      dockerfile: Dockerfile.agent
-    container_name: gocd-agent-5
-    restart: unless-stopped
-    environment:
-      - GO_SERVER_URL=http://gocd-server:8153/go
-      - AGENT_AUTO_REGISTER_KEY=default
-      - AGENT_AUTO_REGISTER_RESOURCES=docker,linux
-      - AGENT_AUTO_REGISTER_HOSTNAME=agent-5
-      - AGENT_BOOTSTRAP_ARGS=-Dgo.agent.ssl.verify=false
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./certs/ca.crt:/usr/local/share/ca-certificates/ca.crt:ro
-      - ../badminton_court:/badminton_court:rw
-      - ./certs:/certs:ro
-    depends_on:
-      - gocd-server
-      
+
 volumes:
   gocd_data:
   gocd_home:

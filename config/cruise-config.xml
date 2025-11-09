@@ -34,9 +34,10 @@
           <job name="build_job">
             <resources>
               <resource>docker</resource>
+              <resource>pearl-hello-world</resource>
             </resources>
             <tasks>
-              <!-- PROVEN CLEANUP BLOCK -->
+              <!-- CLEANUP BLOCK -->
               <exec command="bash">
                 <arg>-c</arg>
                 <arg>
@@ -93,9 +94,10 @@
           <job name="build_job">
             <resources>
               <resource>docker</resource>
+              <resource>badminton_court</resource>
             </resources>
             <tasks>
-              <!-- PROVEN CLEANUP BLOCK -->
+              <!-- CLEANUP BLOCK -->
               <exec command="bash">
                 <arg>-c</arg>
                 <arg>
@@ -146,87 +148,6 @@
         </jobs>
       </stage>
     </pipeline>
-<!--     
-    <pipeline name="badminton_court-test">
-      <materials>
-        <git url="__GIT_REPO_URL_WITH_CREDENTIALS__" branch="master" />
-      </materials>
-      <stage name="build_test">
-        <jobs>
-          <job name="test_job">
-            <resources>
-              <resource>docker</resource>
-            </resources>
-            <tasks>
-              <!-- Only build the test profile -->
-              <exec command="bash">
-                <arg>-c</arg>
-                <arg>cd /badminton_court &amp;&amp; docker-compose -f docker-compose.yml --env-file .env.docker --profile dev --profile test --progress=plain build --no-cache</arg>
-              </exec>
-              <!-- Then run the tests -->
-              <exec command="bash">
-                <arg>-c</arg>
-                <arg>cd /badminton_court &amp;&amp; docker-compose -f docker-compose.yml --env-file .env.docker --profile dev --profile test up --abort-on-container-exit</arg>
-              </exec>
-            </tasks>
-          </job>
-        </jobs>
-      </stage>
-    </pipeline>
-
-    <pipeline name="badminton_court-presentation">
-      <materials>
-        <git url="__GIT_REPO_URL_WITH_CREDENTIALS__" branch="master" />
-      </materials>
-      <stage name="build_presentation">
-        <jobs>
-          <job name="presentation_job">
-            <resources>
-              <resource>docker</resource>
-            </resources>
-            <tasks>
-              <!-- Only build the presentation profile -->
-              <exec command="bash">
-                <arg>-c</arg>
-                <arg>cd /badminton_court &amp;&amp; docker-compose -f docker-compose.yml --env-file .env.docker --profile dev --profile presentation --progress=plain build --no-cache</arg>
-              </exec>
-              <!-- Then run the presentations -->
-              <exec command="bash">
-                <arg>-c</arg>
-                <arg>cd /badminton_court &amp;&amp; docker-compose -f docker-compose.yml --env-file .env.docker --profile dev --profile presentation up --abort-on-container-exit</arg>
-              </exec>
-            </tasks>
-          </job>
-        </jobs>
-      </stage>
-    </pipeline>
-
-    <pipeline name="badminton_court-tunnel">
-      <materials>
-        <git url="__GIT_REPO_URL_WITH_CREDENTIALS__" branch="master" />
-      </materials>
-      <stage name="build_tunnel">
-        <jobs>
-          <job name="tunnel_job">
-            <resources>
-              <resource>docker</resource>
-            </resources>
-            <tasks>
-              <!-- Only build the tunnel profile -->
-              <exec command="bash">
-                <arg>-c</arg>
-                <arg>cd /badminton_court &amp;&amp; docker-compose -f docker-compose.yml --env-file .env.docker --profile dev --profile tunnel --progress=plain build --no-cache</arg>
-              </exec>
-              <!-- Then run the tunnel -->
-              <exec command="bash">
-                <arg>-c</arg>
-                <arg>cd /badminton_court &amp;&amp; docker-compose -f docker-compose.yml --env-file .env.docker --profile dev --profile tunnel up --abort-on-container-exit</arg>
-              </exec>
-            </tasks>
-          </job>
-        </jobs>
-      </stage>
-    </pipeline> -->
 
   </pipelines>
 </cruise>
