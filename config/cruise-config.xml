@@ -67,10 +67,10 @@
                 <arg>-c</arg>
                 <arg>cd /badminton_court &amp;&amp; docker-compose -f docker-compose.yml --env-file .env.docker -p badminton-court down</arg>
               </exec>
-              <!-- Build all service images without cache -->
+              <!-- Build dev profile service images without cache -->
               <exec command="bash">
                 <arg>-c</arg>
-                <arg>cd /badminton_court &amp;&amp; docker-compose -f docker-compose.yml --env-file .env.docker --profile dev --profile test --profile tunnel --profile presentation --progress=plain build --no-cache</arg>
+                <arg>cd /badminton_court &amp;&amp; docker-compose -f docker-compose.yml --env-file .env.docker --profile dev --progress=plain build --no-cache</arg>
               </exec>
               <!-- Force recreate dev containers -->
               <exec command="bash">
@@ -88,6 +88,87 @@
       </stage>
     </pipeline>
     
+    <pipeline name="badminton_court-test">
+      <materials>
+        <git url="__GIT_REPO_URL_WITH_CREDENTIALS__" branch="master" />
+      </materials>
+      <stage name="build_test">
+        <jobs>
+          <job name="test_job">
+            <resources>
+              <resource>docker</resource>
+            </resources>
+            <tasks>
+              <!-- Only build the test profile -->
+              <exec command="bash">
+                <arg>-c</arg>
+                <arg>cd /badminton_court &amp;&amp; docker-compose -f docker-compose.yml --env-file .env.docker --profile test --progress=plain build --no-cache</arg>
+              </exec>
+              <!-- Then run the tests -->
+              <exec command="bash">
+                <arg>-c</arg>
+                <arg>cd /badminton_court &amp;&amp; docker-compose -f docker-compose.yml --env-file .env.docker --profile test up --abort-on-container-exit</arg>
+              </exec>
+            </tasks>
+          </job>
+        </jobs>
+      </stage>
+    </pipeline>
+
+    <pipeline name="badminton_court-presentation">
+      <materials>
+        <git url="__GIT_REPO_URL_WITH_CREDENTIALS__" branch="master" />
+      </materials>
+      <stage name="build_presentation">
+        <jobs>
+          <job name="presentation_job">
+            <resources>
+              <resource>docker</resource>
+            </resources>
+            <tasks>
+              <!-- Only build the presentation profile -->
+              <exec command="bash">
+                <arg>-c</arg>
+                <arg>cd /badminton_court &amp;&amp; docker-compose -f docker-compose.yml --env-file .env.docker --profile presentation --progress=plain build --no-cache</arg>
+              </exec>
+              <!-- Then run the presentations -->
+              <exec command="bash">
+                <arg>-c</arg>
+                <arg>cd /badminton_court &amp;&amp; docker-compose -f docker-compose.yml --env-file .env.docker --profile presentation up --abort-on-container-exit</arg>
+              </exec>
+            </tasks>
+          </job>
+        </jobs>
+      </stage>
+    </pipeline>
+
+    <pipeline name="badminton_court-tunnel">
+      <materials>
+        <git url="__GIT_REPO_URL_WITH_CREDENTIALS__" branch="master" />
+      </materials>
+      <stage name="build_tunnel">
+        <jobs>
+          <job name="tunnel_job">
+            <resources>
+              <resource>docker</resource>
+            </resources>
+            <tasks>
+              <!-- Only build the tunnel profile -->
+              <exec command="bash">
+                <arg>-c</arg>
+                <arg>cd /badminton_court &amp;&amp; docker-compose -f docker-compose.yml --env-file .env.docker --profile tunnel --progress=plain build --no-cache</arg>
+              </exec>
+              <!-- Then run the tunnel -->
+              <exec command="bash">
+                <arg>-c</arg>
+                <arg>cd /badminton_court &amp;&amp; docker-compose -f docker-compose.yml --env-file .env.docker --profile tunnel up --abort-on-container-exit</arg>
+              </exec>
+            </tasks>
+          </job>
+        </jobs>
+      </stage>
+    </pipeline>
+
     <pipeline name="pearl-hello-world">
       <materials>
         <git url="__GIT_REPO_URL_WITH_CREDENTIALS__" branch="master" />
