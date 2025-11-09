@@ -146,7 +146,7 @@
         </jobs>
       </stage>
     </pipeline>
-    
+<!--     
     <pipeline name="badminton_court-test">
       <materials>
         <git url="__GIT_REPO_URL_WITH_CREDENTIALS__" branch="master" />
@@ -226,7 +226,7 @@
           </job>
         </jobs>
       </stage>
-    </pipeline>
+    </pipeline> -->
 
   </pipelines>
 </cruise>
