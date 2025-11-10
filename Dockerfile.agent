@@ -19,6 +19,16 @@ RUN apk add --no-cache git && \
 # Install docker-compose plugin
 RUN apk add --no-cache docker-compose
 
+# Install Node.js
+RUN apk add --no-cache nodejs npm
+
+# Install GitHub CLI (gh)
+RUN apk add --no-cache git && \
+    wget -O gh.tar.gz https://github.com/cli/cli/releases/download/v2.40.1/gh_2.40.1_linux_amd64.tar.gz && \
+    tar -xzf gh.tar.gz && \
+    mv gh_2.40.1_linux_amd64/bin/gh /usr/local/bin/ && \
+    rm -rf gh_2.40.1_linux_amd64 gh.tar.gz
+
 # Add a custom entrypoint script to ensure proper agent registration
 COPY Scripts/agent-entrypoint.sh /usr/local/bin/agent-entrypoint.sh
 RUN chmod +x /usr/local/bin/agent-entrypoint.sh
