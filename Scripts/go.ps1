@@ -24,6 +24,34 @@ if (-Not (Test-Path "./certs/ca.crt")) {
 Write-Host "Stopping and removing containers and volumes..."
 docker-compose down -v
 
+# --- IMAGE REMOVAL BLOCK ---
+Write-Host "Force removing all containers..."
+docker container rm -f $(docker container ls -aq) 2>$null
+
+# Specifically target the mail-test container if it still exists
+ $mailTestContainer = docker container ls -q -f name=mail-test 2>$null
+if ($mailTestContainer) {
+    Write-Host "Force removing mail-test container..."
+    docker container rm -f $mailTestContainer 2>$null
+}
+
+Write-Host "Force removing all images..."
+docker image rm -f $(docker image ls -aq) 2>$null
+
+# Specifically target the analogic/poste.io image if it still exists
+ $posteImage = docker image ls -q analogic/poste.io 2>$null
+if ($posteImage) {
+    Write-Host "Force removing analogic/poste.io image..."
+    docker image rm -f $posteImage 2>$null
+}
+
+Write-Host "Removing all volumes..."
+docker volume rm -f $(docker volume ls -q) 2>$null
+
+Write-Host "Performing complete system cleanup..."
+docker system prune -a --volumes -f
+# --- END OF IMAGE REMOVAL BLOCK ---
+
 Write-Host "Rebuilding the image from scratch..."
 docker-compose build --no-cache
 
