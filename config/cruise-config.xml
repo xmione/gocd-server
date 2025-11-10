@@ -97,52 +97,48 @@
               <resource>badminton_court</resource>
             </resources>
             <tasks>
-              <!-- CLEANUP BLOCK -->
+              <!-- STEP 1: Decrypt Environment files (This is fine as it doesn't use Docker) -->
+              <exec command="bash">
+                <arg>-c</arg>
+                <arg>cd /badminton_court &amp;&amp; node Scripts/docker-menu.js 13.6</arg>
+              </exec>
+
+              <!-- STEP 2: Clean up Containers and Images (Using direct commands) -->
               <exec command="bash">
                 <arg>-c</arg>
                 <arg>
                   echo "========================================================" &amp;&amp;
-                  echo "AGGRESSIVE CLEANUP OF badminton-court" &amp;&amp;
+                  echo "CLEANING UP badminton_court" &amp;&amp;
                   echo "========================================================" &amp;&amp;
-                  echo "Forcefully removing specific containers by name..." &amp;&amp;
-                  docker rm -f web-dev || echo "Container 'web-dev' not found." &amp;&amp;
-                  docker rm -f db || echo "Container 'db' not found." &amp;&amp;
-                  docker rm -f mail-test || echo "Container 'mail-test' not found." &amp;&amp;
-                  docker rm -f redis || echo "Container 'redis' not found." &amp;&amp;
-                  echo "Running docker-compose down to clean up networks, volumes, etc..." &amp;&amp;
                   cd /badminton_court &amp;&amp;
-                  docker-compose -f docker-compose.yml --env-file .env.docker -p badminton-court down -v --remove-orphans || echo "docker-compose down had issues, but continuing." &amp;&amp;
-                  echo "Pruning dangling images..." &amp;&amp;
-                  docker image prune -f
+                  docker-compose --env-file .env.docker down -v --rmi all &amp;&amp;
+                  docker system prune -a --volumes -f
                 </arg>
               </exec>
 
-              <!-- ORIGINAL TASKS -->
-              <!-- Convert line endings and decrypt environment files -->
+              <!-- STEP 3: Build and start dev profile containers (Using direct commands) -->
               <exec command="bash">
                 <arg>-c</arg>
-                <arg>cd /badminton_court &amp;&amp; sed -i 's/\r$//' Scripts/decryptenvfiles.sh &amp;&amp; bash Scripts/decryptenvfiles.sh</arg>
+                <arg>
+                  echo "========================================================" &amp;&amp;
+                  echo "BUILDING badminton_court" &amp;&amp;
+                  echo "========================================================" &amp;&amp;
+                  cd /badminton_court &amp;&amp;
+                  docker-compose --env-file .env.docker --profile dev --progress=plain build --no-cache
+                </arg>
               </exec>
-              <!-- Stop any existing containers -->
+              
               <exec command="bash">
                 <arg>-c</arg>
-                <arg>cd /badminton_court &amp;&amp; docker-compose -f docker-compose.yml --env-file .env.docker -p badminton-court down</arg>
+                <arg>
+                  echo "========================================================" &amp;&amp;
+                  echo "STARTING badminton_court" &amp;&amp;
+                  echo "========================================================" &amp;&amp;
+                  cd /badminton_court &amp;&amp;
+                  docker-compose --env-file .env.docker --profile dev up -d
+                </arg>
               </exec>
-              <!-- Build dev profile service images without cache -->
-              <exec command="bash">
-                <arg>-c</arg>
-                <arg>cd /badminton_court &amp;&amp; docker-compose -f docker-compose.yml --env-file .env.docker --profile dev --progress=plain build --no-cache</arg>
-              </exec>
-              <!-- Force recreate dev containers -->
-              <exec command="bash">
-                <arg>-c</arg>
-                <arg>cd /badminton_court &amp;&amp; docker-compose -f docker-compose.yml --env-file .env.docker --profile dev -p badminton-court up -d --force-recreate</arg>
-              </exec>
-              <!-- Show service status -->
-              <exec command="bash">
-                <arg>-c</arg>
-                <arg>cd /badminton_court &amp;&amp; docker-compose -f docker-compose.yml --env-file .env.docker --profile dev -p badminton-court ps</arg>
-              </exec>
+
             </tasks>
           </job>
         </jobs>
