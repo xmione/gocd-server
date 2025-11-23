@@ -112,6 +112,7 @@
                   echo "========================================================" &amp;&amp;
                   cd /badminton_court &amp;&amp;
                   docker-compose --env-file .env.docker down -v --rmi all &amp;&amp;
+                  docker volume rm badminton_court_poste_data badminton_court_postgres_data badminton_court_postgres_test_data badminton_court_mariadb_data 2>/dev/null || true &amp;&amp;
                   docker system prune -a --volumes -f
                 </arg>
               </exec>
