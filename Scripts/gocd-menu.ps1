@@ -27,10 +27,12 @@ do {
     Write-Host "   3.3. Disable agent" -ForegroundColor White
     Write-Host ""
     Write-Host "4. SYSTEM UTILITIES" -ForegroundColor Cyan
-    Write-Host "   4.1. Open GoCD web interface" -ForegroundColor White
-    Write-Host "   4.2. View system resources" -ForegroundColor White
-    Write-Host "   4.3. Clean up Docker resources" -ForegroundColor White
-    Write-Host "   4.4. Print Project Folder Structure" -ForegroundColor White
+    Write-Host "   4.1. Encrypt .env files" -ForegroundColor White
+    Write-Host "   4.2. Decrypt .env files" -ForegroundColor White
+    Write-Host "   4.3. Open GoCD web interface" -ForegroundColor White
+    Write-Host "   4.4. View system resources" -ForegroundColor White
+    Write-Host "   4.5. Clean up Docker resources" -ForegroundColor White
+    Write-Host "   4.6. Print Project Folder Structure" -ForegroundColor White
     Write-Host ""
     Write-Host "5. Exit" -ForegroundColor Red
     Write-Host ""
@@ -161,25 +163,37 @@ do {
         
         # System Utilities
         "4.1" { 
+            Write-Host "Enrcrypt .env files..." -ForegroundColor Yellow
+            npm run encryptenvfiles
+            Write-Host "Press Enter to continue..." -ForegroundColor Yellow
+            Read-Host
+        }
+        "4.2" { 
+            Write-Host "Decrypt .env files..." -ForegroundColor Yellow
+            npm run decryptenvfiles
+            Write-Host "Press Enter to continue..." -ForegroundColor Yellow
+            Read-Host
+        }
+        "4.3" { 
             Write-Host "Opening GoCD web interface..." -ForegroundColor Yellow
             Start-Process "http://localhost:8153/go"
             Write-Host "Press Enter to continue..." -ForegroundColor Yellow
             Read-Host
         }
-        "4.2" { 
+        "4.4" { 
             Write-Host "System resources:" -ForegroundColor Yellow
             docker stats --no-stream
             Write-Host "Press Enter to continue..." -ForegroundColor Yellow
             Read-Host
         }
-        "4.3" { 
+        "4.5" { 
             Write-Host "Cleaning up Docker resources..." -ForegroundColor Yellow
             docker system prune -f
             Write-Host "Cleanup completed." -ForegroundColor Green
             Write-Host "Press Enter to continue..." -ForegroundColor Yellow
             Read-Host
         }
-        "4.4" { 
+        "4.6" { 
             pnpm run pfs
             Write-Host "Press Enter to continue..." -ForegroundColor Yellow
             Read-Host
