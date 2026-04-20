@@ -146,5 +146,53 @@
       </stage>
     </pipeline>
 
+    <pipeline name="solvpn-deployment">
+      <materials>
+        <git url="https://github.com/your-username/solvpn.git" branch="main">
+           <password>{{SECRET:[github][token]}}</password>
+        </git>
+      </materials>
+      <stage name="build">
+        <jobs>
+          <job name="build_engine_and_ui">
+            <tasks>
+              <exec command="bash">
+                <arg>-c</arg>
+                <arg>
+                  echo "========================================================" &&
+                  echo "CLEANING UP SolVPN WORKSPACE" &&
+                  echo "========================================================" &&
+                  rm -rf /solvpn/build/* || true
+                </arg>
+              </exec>
+
+              <exec command="bash">
+                <arg>-c</arg>
+                <arg>
+                  echo "========================================================" &&
+                  echo "COMPILING solvpn_engine.dll" &&
+                  echo "========================================================" &&
+                  cd /solvpn/engine &&
+                  gcc -shared -o ../build/solvpn_engine.dll vpn_server.c -lssl -lcrypto
+                </arg>
+              </exec>
+
+              <exec command="bash">
+                <arg>-c</arg>
+                <arg>
+                  echo "========================================================" &&
+                  echo "PACKAGING PYTHON FLET UI" &&
+                  echo "========================================================" &&
+                  cd /solvpn/ui &&
+                  pip install -r requirements.txt &&
+                  flet pack main.py --name "SolVPN_Client" --dist ../build/
+                </arg>
+              </exec>
+            </tasks>
+          </job>
+        </jobs>
+      </stage>
+    </pipeline>
+
   </pipelines>
 </cruise>
