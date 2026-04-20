@@ -22,6 +22,10 @@ RUN apk add --no-cache docker-compose
 # Install Node.js
 RUN apk add --no-cache nodejs npm
 
+# Install SolVPN Dependencies (C-compiler, OpenSSL headers, Python, and Pip)
+# Includes mingw-w64-gcc in case you need to cross-compile the .dll for Windows
+RUN apk add --no-cache gcc musl-dev openssl-dev python3 py3-pip mingw-w64-gcc
+
 # Install GitHub CLI (gh)
 RUN apk add --no-cache git && \
     wget -O gh.tar.gz https://github.com/cli/cli/releases/download/v2.40.1/gh_2.40.1_linux_amd64.tar.gz && \

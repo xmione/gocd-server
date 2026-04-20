@@ -155,6 +155,10 @@
       <stage name="build">
         <jobs>
           <job name="build_engine_and_ui">
+            <resources>
+              <resource>docker</resource>
+              <resource>solvpn</resource>
+            </resources>
             <tasks>
               <exec command="bash">
                 <arg>-c</arg>
