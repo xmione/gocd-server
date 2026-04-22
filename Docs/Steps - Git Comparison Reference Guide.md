@@ -49,14 +49,21 @@ If you just want a quick look at the differences or the content of a file on ano
 - **(Just remember to delete temp_package.json afterward.)**
 ---
 
-## 4. Understanding Symbols
-When using `--name-status`, the letters indicate the following:
+## 4. Restoring Deleted files
+- **This means that these files are not in the current feature branch but in the master branch.**
+  ```bash
+  # Example
+  git restore --source master "Docs/Setup Guide.md"
+  ```
+---
+## 5. Understanding Symbols
+**When using `--name-status`, the letters indicate the following:**
 * **A**: Added — The file is new in your current branch.
 * **M**: Modified — The file exists in both, but the code is different.
 * **D**: Deleted — The file was removed in your current branch but exists in master.
 
 ---
 
-## 5. Branch vs. Merge Base
+## 6. Branch vs. Merge Base
 - **`git diff master..HEAD`**: Compares the tip of master to your current work.
 - **`git diff master...HEAD`**: Compares the "merge base" (the point where you branched off) to your current work. This is usually what you want for Pull Requests.
