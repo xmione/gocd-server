@@ -28,6 +28,7 @@ Use these commands to see which files are new, modified, or deleted without seei
 | `git diff master --name-only` | Shows a clean list of changed filenames |
 | `git diff master --stat` | Shows a summary of insertions and deletions per file |
 
+- Note: You can add a `> diff.txt` at the end of each command to save it to diff.txt so that you can later run `code diff.txt` to view the text file.
 ---
 
 ## 3. Viewing Content in Terminal
