@@ -3,6 +3,7 @@
 # It allows users to start, stop, and manage the GoCD environment.
 # Ensure you have Docker and Docker Compose installed and running before using this script.
 # Usage: Run this script in PowerShell to display the GoCD management menu.
+# Scripts/gocd-menu.ps1
 
 do {
     Clear-Host
@@ -10,11 +11,12 @@ do {
     Write-Host "====================" -ForegroundColor Green
     Write-Host ""
     Write-Host "1. CONTAINER MANAGEMENT" -ForegroundColor Cyan
-    Write-Host "   1.1. Recreate Docker containers" -ForegroundColor White
+    Write-Host "   1.1. Update/Restart GoCD (Fast Build)" -ForegroundColor White
     Write-Host "   1.2. Get Docker container errors" -ForegroundColor White
     Write-Host "   1.3. Validate GoCD environment" -ForegroundColor White
     Write-Host "   1.4. View container logs" -ForegroundColor White
     Write-Host "   1.5. Stop all containers" -ForegroundColor White
+    Write-Host "   1.6. SYSTEM HARD RESET (Full Wipe via go.ps1)" -ForegroundColor Red
     Write-Host ""
     Write-Host "2. PIPELINE MANAGEMENT" -ForegroundColor Cyan
     Write-Host "   2.1. Trigger badminton_court pipeline" -ForegroundColor White
@@ -34,7 +36,14 @@ do {
     Write-Host "   4.5. Clean up Docker resources" -ForegroundColor White
     Write-Host "   4.6. Print Project Folder Structure" -ForegroundColor White
     Write-Host ""
-    Write-Host "5. Exit" -ForegroundColor Red
+    Write-Host "5. TROUBLE-SHOOT CONTAINERS" -ForegroundColor Cyan
+    Write-Host "   5.1. Start gocd-server container" -ForegroundColor White
+    Write-Host "   5.2. Start gocd-agent-1 container" -ForegroundColor White
+    Write-Host "   5.3. Start gocd-agent-2 container" -ForegroundColor White
+    Write-Host "   5.4. Start gocd-agent-3 container" -ForegroundColor White
+    Write-Host "   5.5. View container logs" -ForegroundColor White
+    Write-Host ""
+    Write-Host "6. Exit" -ForegroundColor Red
     Write-Host ""
 
     $choice = Read-Host "Select an option (e.g., 1.1, 2.3, or 5)"
@@ -42,7 +51,7 @@ do {
     switch ($choice) {
         # Container Management
         "1.1" { 
-            npm run go
+            npm run up
             Write-Host "Press Enter to continue..." -ForegroundColor Yellow
             Read-Host
         }
@@ -73,6 +82,12 @@ do {
             Write-Host "Press Enter to continue..." -ForegroundColor Yellow
             Read-Host
         }
+        "1.6" { 
+            Write-Host "WARNING: Performing Full System Wipe..." -ForegroundColor Red
+            npm run go
+            Write-Host "Press Enter to continue..." -ForegroundColor Yellow
+            Read-Host
+        }        
         
         # Pipeline Management
         "2.1" { 
@@ -199,7 +214,39 @@ do {
             Read-Host
         }
         
-        "5" { 
+        # Troubleshoot Containers
+        "5.1" { 
+            Write-Host "Starting gocd-server container..." -ForegroundColor Yellow
+            docker-compose up -d --build gocd-server
+            Write-Host "Press Enter to continue..." -ForegroundColor Yellow
+            Read-Host
+        }
+        "5.2" { 
+            Write-Host "Starting gocd-agent-1 container..." -ForegroundColor Yellow
+            docker-compose up -d --build gocd-agent-1
+            Write-Host "Press Enter to continue..." -ForegroundColor Yellow
+            Read-Host
+        }
+        "5.3" { 
+            Write-Host "Starting gocd-agent-2 container..." -ForegroundColor Yellow
+            docker-compose up -d --build gocd-agent-2
+            Write-Host "Press Enter to continue..." -ForegroundColor Yellow
+            Read-Host
+        }
+        "5.4" { 
+            Write-Host "Starting gocd-agent-3 container..." -ForegroundColor Yellow
+            docker-compose up -d --build gocd-agent-3
+            Write-Host "Press Enter to continue..." -ForegroundColor Yellow
+            Read-Host
+        }
+        "5.5" { 
+            Write-Host "Viewing container logs..." -ForegroundColor Yellow
+            docker-compose logs gocd-server
+            Write-Host "Press Enter to continue..." -ForegroundColor Yellow
+            Read-Host
+        }
+         
+        "6" { 
             Write-Host "Exiting..." -ForegroundColor Green
             exit
         }
