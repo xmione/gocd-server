@@ -3,6 +3,7 @@
 # It allows users to start, stop, and manage the GoCD environment.
 # Ensure you have Docker and Docker Compose installed and running before using this script.
 # Usage: Run this script in PowerShell to display the GoCD management menu.
+# Scripts/gocd-menu.ps1
 
 do {
     Clear-Host
@@ -10,11 +11,12 @@ do {
     Write-Host "====================" -ForegroundColor Green
     Write-Host ""
     Write-Host "1. CONTAINER MANAGEMENT" -ForegroundColor Cyan
-    Write-Host "   1.1. Recreate Docker containers" -ForegroundColor White
+    Write-Host "   1.1. Update/Restart GoCD (Fast Build)" -ForegroundColor White
     Write-Host "   1.2. Get Docker container errors" -ForegroundColor White
     Write-Host "   1.3. Validate GoCD environment" -ForegroundColor White
     Write-Host "   1.4. View container logs" -ForegroundColor White
     Write-Host "   1.5. Stop all containers" -ForegroundColor White
+    Write-Host "   1.6. SYSTEM HARD RESET (Full Wipe via go.ps1)" -ForegroundColor Red
     Write-Host ""
     Write-Host "2. PIPELINE MANAGEMENT" -ForegroundColor Cyan
     Write-Host "   2.1. Trigger badminton_court pipeline" -ForegroundColor White
@@ -27,12 +29,21 @@ do {
     Write-Host "   3.3. Disable agent" -ForegroundColor White
     Write-Host ""
     Write-Host "4. SYSTEM UTILITIES" -ForegroundColor Cyan
-    Write-Host "   4.1. Open GoCD web interface" -ForegroundColor White
-    Write-Host "   4.2. View system resources" -ForegroundColor White
-    Write-Host "   4.3. Clean up Docker resources" -ForegroundColor White
-    Write-Host "   4.4. Print Project Folder Structure" -ForegroundColor White
+    Write-Host "   4.1. Encrypt .env files" -ForegroundColor White
+    Write-Host "   4.2. Decrypt .env files" -ForegroundColor White
+    Write-Host "   4.3. Open GoCD web interface" -ForegroundColor White
+    Write-Host "   4.4. View system resources" -ForegroundColor White
+    Write-Host "   4.5. Clean up Docker resources" -ForegroundColor White
+    Write-Host "   4.6. Print Project Folder Structure" -ForegroundColor White
     Write-Host ""
-    Write-Host "5. Exit" -ForegroundColor Red
+    Write-Host "5. TROUBLE-SHOOT CONTAINERS" -ForegroundColor Cyan
+    Write-Host "   5.1. Start gocd-server container" -ForegroundColor White
+    Write-Host "   5.2. Start gocd-agent-1 container" -ForegroundColor White
+    Write-Host "   5.3. Start gocd-agent-2 container" -ForegroundColor White
+    Write-Host "   5.4. Start gocd-agent-3 container" -ForegroundColor White
+    Write-Host "   5.5. View container logs" -ForegroundColor White
+    Write-Host ""
+    Write-Host "6. Exit" -ForegroundColor Red
     Write-Host ""
 
     $choice = Read-Host "Select an option (e.g., 1.1, 2.3, or 5)"
@@ -40,7 +51,7 @@ do {
     switch ($choice) {
         # Container Management
         "1.1" { 
-            npm run go
+            npm run up
             Write-Host "Press Enter to continue..." -ForegroundColor Yellow
             Read-Host
         }
@@ -71,6 +82,12 @@ do {
             Write-Host "Press Enter to continue..." -ForegroundColor Yellow
             Read-Host
         }
+        "1.6" { 
+            Write-Host "WARNING: Performing Full System Wipe..." -ForegroundColor Red
+            npm run go
+            Write-Host "Press Enter to continue..." -ForegroundColor Yellow
+            Read-Host
+        }        
         
         # Pipeline Management
         "2.1" { 
@@ -161,31 +178,75 @@ do {
         
         # System Utilities
         "4.1" { 
+            Write-Host "Enrcrypt .env files..." -ForegroundColor Yellow
+            npm run encryptenvfiles
+            Write-Host "Press Enter to continue..." -ForegroundColor Yellow
+            Read-Host
+        }
+        "4.2" { 
+            Write-Host "Decrypt .env files..." -ForegroundColor Yellow
+            npm run decryptenvfiles
+            Write-Host "Press Enter to continue..." -ForegroundColor Yellow
+            Read-Host
+        }
+        "4.3" { 
             Write-Host "Opening GoCD web interface..." -ForegroundColor Yellow
             Start-Process "http://localhost:8153/go"
             Write-Host "Press Enter to continue..." -ForegroundColor Yellow
             Read-Host
         }
-        "4.2" { 
+        "4.4" { 
             Write-Host "System resources:" -ForegroundColor Yellow
             docker stats --no-stream
             Write-Host "Press Enter to continue..." -ForegroundColor Yellow
             Read-Host
         }
-        "4.3" { 
+        "4.5" { 
             Write-Host "Cleaning up Docker resources..." -ForegroundColor Yellow
             docker system prune -f
             Write-Host "Cleanup completed." -ForegroundColor Green
             Write-Host "Press Enter to continue..." -ForegroundColor Yellow
             Read-Host
         }
-        "4.4" { 
+        "4.6" { 
             pnpm run pfs
             Write-Host "Press Enter to continue..." -ForegroundColor Yellow
             Read-Host
         }
         
-        "5" { 
+        # Troubleshoot Containers
+        "5.1" { 
+            Write-Host "Starting gocd-server container..." -ForegroundColor Yellow
+            docker-compose up -d --build gocd-server
+            Write-Host "Press Enter to continue..." -ForegroundColor Yellow
+            Read-Host
+        }
+        "5.2" { 
+            Write-Host "Starting gocd-agent-1 container..." -ForegroundColor Yellow
+            docker-compose up -d --build gocd-agent-1
+            Write-Host "Press Enter to continue..." -ForegroundColor Yellow
+            Read-Host
+        }
+        "5.3" { 
+            Write-Host "Starting gocd-agent-2 container..." -ForegroundColor Yellow
+            docker-compose up -d --build gocd-agent-2
+            Write-Host "Press Enter to continue..." -ForegroundColor Yellow
+            Read-Host
+        }
+        "5.4" { 
+            Write-Host "Starting gocd-agent-3 container..." -ForegroundColor Yellow
+            docker-compose up -d --build gocd-agent-3
+            Write-Host "Press Enter to continue..." -ForegroundColor Yellow
+            Read-Host
+        }
+        "5.5" { 
+            Write-Host "Viewing container logs..." -ForegroundColor Yellow
+            docker-compose logs gocd-server
+            Write-Host "Press Enter to continue..." -ForegroundColor Yellow
+            Read-Host
+        }
+         
+        "6" { 
             Write-Host "Exiting..." -ForegroundColor Green
             exit
         }

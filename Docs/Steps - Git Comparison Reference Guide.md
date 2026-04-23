@@ -44,7 +44,7 @@ If you just want a quick look at the differences or the content of a file on ano
   ```
 - **If you want a one-liner that works in Git Bash, you can use a standard temporary file instead of process substitution:**
   ```bash
-  git show master:package.json > temp_package.json && code --diff temp_package.json package.json
+  git show "master:package.json" > "temp/temp_package.json" && code --diff "temp/temp_package.json" "package.json"
   ```
 - **(Just remember to delete temp_package.json afterward.)**
 ---

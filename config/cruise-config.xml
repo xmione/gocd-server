@@ -27,7 +27,7 @@
 
     <pipeline name="pearl-hello-world">
       <materials>
-        <git url="__GIT_REPO_URL_WITH_CREDENTIALS__" branch="master" />
+        <git url="__PEARL_REPO_URL_WITH_CREDENTIALS__" branch="master" />
       </materials>
       <stage name="build">
         <jobs>
@@ -141,6 +141,30 @@
               </exec>
 
             </tasks>
+          </job>
+        </jobs>
+      </stage>
+    </pipeline>
+
+    <pipeline name="solvpn-deployment">
+      <materials>
+        <git url="__SOLVPN_REPO_URL_WITH_CREDENTIALS__" branch="feature-stats-logging" />
+      </materials>
+      <stage name="Build_and_Package">
+        <jobs>
+          <job name="compile_windows_dist">
+            <resources>
+              <resource>docker</resource>
+              <resource>solvpn</resource>
+            </resources>
+            <tasks>
+              <exec command="bash">
+                <arg>Scripts/build_solvpn.sh</arg>
+              </exec>
+            </tasks>
+            <artifacts>
+              <artifact type="build" src="build/*" dest="solvpn_windows_release/" />
+            </artifacts>
           </job>
         </jobs>
       </stage>

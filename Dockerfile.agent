@@ -3,6 +3,9 @@ FROM gocd/gocd-agent-alpine:v25.3.0
 
 USER root
 
+# 1. Flag to control SolVPN installation
+ARG INSTALL_SOLVPN=false
+
 # Install ca-certificates, docker CLI, and other dependencies
 RUN apk add --no-cache ca-certificates openssl curl docker gnupg
 
@@ -22,12 +25,12 @@ RUN apk add --no-cache docker-compose
 # Install Node.js
 RUN apk add --no-cache nodejs npm
 
-# Install GitHub CLI (gh)
-RUN apk add --no-cache git && \
-    wget -O gh.tar.gz https://github.com/cli/cli/releases/download/v2.40.1/gh_2.40.1_linux_amd64.tar.gz && \
-    tar -xzf gh.tar.gz && \
-    mv gh_2.40.1_linux_amd64/bin/gh /usr/local/bin/ && \
-    rm -rf gh_2.40.1_linux_amd64 gh.tar.gz
+# --- CONDITIONAL SOLVPN BLOCK ---
+# Replaces your original static installation with the ARG check
+RUN if [ "$INSTALL_SOLVPN" = "true" ] ; then \
+    apk add --no-cache gcc musl-dev openssl-dev python3 py3-pip mingw-w64-gcc && \
+    pip3 install flet --break-system-packages; \
+    fi
 
 # Add a custom entrypoint script to ensure proper agent registration
 COPY Scripts/agent-entrypoint.sh /usr/local/bin/agent-entrypoint.sh
