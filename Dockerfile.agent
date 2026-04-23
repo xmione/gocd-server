@@ -1,5 +1,5 @@
 # Dockerfile.agent
-FROM gocd/gocd-agent-alpine:v25.3.0
+FROM gocd/gocd-agent-alpine:v25.4.0
 
 USER root
 
@@ -26,7 +26,6 @@ RUN apk add --no-cache docker-compose
 RUN apk add --no-cache nodejs npm
 
 # --- CONDITIONAL SOLVPN BLOCK ---
-# Replaces your original static installation with the ARG check
 RUN if [ "$INSTALL_SOLVPN" = "true" ] ; then \
     apk add --no-cache gcc musl-dev openssl-dev python3 py3-pip mingw-w64-gcc && \
     pip3 install flet --break-system-packages; \
