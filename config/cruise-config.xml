@@ -159,7 +159,8 @@
             </resources>
             <tasks>
               <exec command="bash">
-                <arg>Scripts/build_solvpn.sh</arg>
+                <arg>-c</arg>
+                <arg>cd /solvpn &amp;&amp; Scripts/build_solvpn.sh</arg>
               </exec>
             </tasks>
             <artifacts>
