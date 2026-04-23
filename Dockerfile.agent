@@ -26,9 +26,22 @@ RUN apk add --no-cache docker-compose
 RUN apk add --no-cache nodejs npm
 
 # --- CONDITIONAL SOLVPN BLOCK ---
+# mingw-w64-openssl does not exist in Alpine repos, so we cross-compile
+# OpenSSL for Windows ourselves and install it under the MinGW sysroot.
 RUN if [ "$INSTALL_SOLVPN" = "true" ] ; then \
-    apk add --no-cache gcc musl-dev openssl-dev python3 py3-pip mingw-w64-gcc && \
-    pip3 install flet --break-system-packages; \
+    apk add --no-cache gcc musl-dev openssl-dev python3 py3-pip mingw-w64-gcc make perl tar curl && \
+    pip3 install flet --break-system-packages && \
+    OPENSSL_VERSION=3.3.1 && \
+    curl -fsSL https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz | tar -xz -C /tmp && \
+    cd /tmp/openssl-${OPENSSL_VERSION} && \
+    ./Configure mingw64 \
+        --cross-compile-prefix=x86_64-w64-mingw32- \
+        --prefix=/usr/x86_64-w64-mingw32 \
+        --openssldir=/usr/x86_64-w64-mingw32/ssl \
+        no-shared no-tests && \
+    make -j$(nproc) && \
+    make install_sw && \
+    rm -rf /tmp/openssl-${OPENSSL_VERSION}; \
     fi
 
 # Add a custom entrypoint script to ensure proper agent registration
