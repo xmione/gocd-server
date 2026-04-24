@@ -67,9 +67,7 @@ services:
   gocd-agent-3:
     build:
       context: .
-      dockerfile: Dockerfile.agent
-      args:
-        - INSTALL_SOLVPN=true
+      dockerfile: Dockerfile.agent.solvpn
     container_name: gocd-agent-3
     restart: unless-stopped
     environment:

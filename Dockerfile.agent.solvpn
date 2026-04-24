@@ -1,0 +1,51 @@
+# Dockerfile.agent.solvpn
+# This is intentionally kept as a copy of Dockerfile.agent with INSTALL_SOLVPN=true.
+# Wine/Inno Setup installer creation is deferred to Phase 2 when a Windows build
+# agent is available. For now, Stage 2 produces a zip package instead.
+FROM gocd/gocd-agent-alpine:v25.4.0
+
+USER root
+
+ARG INSTALL_SOLVPN=true
+
+# Install base dependencies
+RUN apk add --no-cache ca-certificates openssl curl docker gnupg
+
+# Install jq
+RUN apk add --no-cache jq
+
+# Install GitHub CLI (gh)
+RUN apk add --no-cache git && \
+    wget -O gh.tar.gz https://github.com/cli/cli/releases/download/v2.40.1/gh_2.40.1_linux_amd64.tar.gz && \
+    tar -xzf gh.tar.gz && \
+    mv gh_2.40.1_linux_amd64/bin/gh /usr/local/bin/ && \
+    rm -rf gh_2.40.1_linux_amd64 gh.tar.gz
+
+# Install docker-compose
+RUN apk add --no-cache docker-compose
+
+# Install Node.js
+RUN apk add --no-cache nodejs npm
+
+# SolVPN build dependencies: cross-compiler, Python, OpenSSL for Windows
+RUN apk add --no-cache gcc musl-dev openssl-dev python3 py3-pip mingw-w64-gcc \
+        make perl tar unzip zip && \
+    pip3 install flet --break-system-packages && \
+    OPENSSL_VERSION=3.3.1 && \
+    curl -fsSL https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz | tar -xz -C /tmp && \
+    cd /tmp/openssl-${OPENSSL_VERSION} && \
+    ./Configure mingw64 \
+        --cross-compile-prefix=x86_64-w64-mingw32- \
+        --prefix=/usr/x86_64-w64-mingw32 \
+        --openssldir=/usr/x86_64-w64-mingw32/ssl \
+        no-shared no-tests && \
+    make -j$(nproc) && \
+    make install_sw && \
+    rm -rf /tmp/openssl-${OPENSSL_VERSION}
+
+# Add entrypoint script
+COPY Scripts/agent-entrypoint.sh /usr/local/bin/agent-entrypoint.sh
+RUN chmod +x /usr/local/bin/agent-entrypoint.sh
+
+USER go
+ENTRYPOINT ["agent-entrypoint.sh"]
