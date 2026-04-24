@@ -14,6 +14,7 @@ services:
       - GO_SERVER_SSL_PORT=8154
       - GO_SERVER_SSL_CERTIFICATE=/etc/go/server/server.crt
       - GO_SERVER_SSL_PRIVATE_KEY=/etc/go/server/server.key
+      - TINI_SUBREAPER=true
     volumes:
       - gocd_data:/godata
       - gocd_home:/home/go

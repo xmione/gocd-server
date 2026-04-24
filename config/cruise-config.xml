@@ -1,6 +1,6 @@
 <!-- config/cruise-config.xml -->
 <cruise schemaVersion="139">
-  <server agentAutoRegisterKey="default" serverId="__SERVER_ID__" tokenGenerationKey="__TOKEN_GENERATION_KEY__">
+  <server artifactsDir="artifacts" commandRepositoryLocation="default" agentAutoRegisterKey="default" serverId="__SERVER_ID__" tokenGenerationKey="__TOKEN_GENERATION_KEY__">
     <security>
       <authConfigs>
         <authConfig id="password_file" pluginId="cd.go.authentication.passwordfile">
@@ -150,7 +150,7 @@
       <materials>
         <git url="__SOLVPN_REPO_URL_WITH_CREDENTIALS__" branch="master" />
       </materials>
-
+ 
       <stage name="Build_and_Package">
         <jobs>
           <job name="compile_windows_dist">
@@ -170,7 +170,7 @@
           </job>
         </jobs>
       </stage>
-
+ 
       <stage name="Create_Installer">
         <jobs>
           <job name="build_installer">
@@ -179,7 +179,7 @@
               <resource>solvpn</resource>
             </resources>
             <tasks>
-              <fetchartifact pipeline="solvpn-deployment" stage="Build_and_Package" job="compile_windows_dist" srcdir="solvpn_windows_release">
+              <fetchartifact artifactOrigin="gocd" pipeline="solvpn-deployment" stage="Build_and_Package" job="compile_windows_dist" srcdir="solvpn_windows_release">
                 <dest>build</dest>
               </fetchartifact>
               <exec command="bash">
@@ -193,7 +193,7 @@
           </job>
         </jobs>
       </stage>
-
+ 
       <stage name="Publish_Release">
         <jobs>
           <job name="publish_github_release">
@@ -202,7 +202,7 @@
               <resource>solvpn</resource>
             </resources>
             <tasks>
-              <fetchartifact pipeline="solvpn-deployment" stage="Create_Installer" job="build_installer" srcdir="solvpn_installer">
+              <fetchartifact artifactOrigin="gocd" pipeline="solvpn-deployment" stage="Create_Installer" job="build_installer" srcdir="solvpn_installer">
                 <dest>installer_output</dest>
               </fetchartifact>
               <exec command="bash">
@@ -213,7 +213,7 @@
           </job>
         </jobs>
       </stage>
-
+ 
     </pipeline>
 
   </pipelines>
