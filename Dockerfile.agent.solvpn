@@ -16,6 +16,9 @@ RUN apk add --no-cache git && \
     mv gh_2.40.1_linux_amd64/bin/gh /usr/local/bin/ && \
     rm -rf gh_2.40.1_linux_amd64 gh.tar.gz
 
+# Install NSIS for building Windows .exe installers
+RUN apk add --no-cache nsis
+    
 # Add entrypoint script
 COPY Scripts/agent-entrypoint.sh /usr/local/bin/agent-entrypoint.sh
 RUN chmod +x /usr/local/bin/agent-entrypoint.sh

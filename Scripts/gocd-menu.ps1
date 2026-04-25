@@ -37,10 +37,10 @@ do {
     Write-Host "   4.6. Print Project Folder Structure" -ForegroundColor White
     Write-Host ""
     Write-Host "5. TROUBLE-SHOOT CONTAINERS" -ForegroundColor Cyan
-    Write-Host "   5.1. Start gocd-server container" -ForegroundColor White
-    Write-Host "   5.2. Start gocd-agent-1 container" -ForegroundColor White
-    Write-Host "   5.3. Start gocd-agent-2 container" -ForegroundColor White
-    Write-Host "   5.4. Start gocd-agent-3 container" -ForegroundColor White
+    Write-Host "   5.1. Rebuild and Re-start gocd-server container" -ForegroundColor White
+    Write-Host "   5.2. Rebuild and Re-start gocd-agent-1 container" -ForegroundColor White
+    Write-Host "   5.3. Rebuild and Re-start gocd-agent-2 container" -ForegroundColor White
+    Write-Host "   5.4. Rebuild and Re-start gocd-agent-3 container" -ForegroundColor White
     Write-Host "   5.5. View container logs" -ForegroundColor White
     Write-Host ""
     Write-Host "6. Exit" -ForegroundColor Red
@@ -216,26 +216,30 @@ do {
         
         # Troubleshoot Containers
         "5.1" { 
-            Write-Host "Starting gocd-server container..." -ForegroundColor Yellow
-            docker-compose up -d --build gocd-server
+            Write-Host "Rebuilding and starting gocd-server container..." -ForegroundColor Yellow
+            docker-compose build gocd-server        # rebuilds only gocd-server, uses cache
+            docker-compose up -d gocd-server        # restarts it
             Write-Host "Press Enter to continue..." -ForegroundColor Yellow
             Read-Host
         }
         "5.2" { 
-            Write-Host "Starting gocd-agent-1 container..." -ForegroundColor Yellow
-            docker-compose up -d --build gocd-agent-1
+            Write-Host "Rebuilding and starting gocd-agent-1 container..." -ForegroundColor Yellow
+            docker-compose build gocd-agent-1        # rebuilds only agent-1, uses cache
+            docker-compose up -d gocd-agent-1        # restarts it
             Write-Host "Press Enter to continue..." -ForegroundColor Yellow
             Read-Host
         }
         "5.3" { 
-            Write-Host "Starting gocd-agent-2 container..." -ForegroundColor Yellow
-            docker-compose up -d --build gocd-agent-2
+            Write-Host "Rebuilding and starting gocd-agent-2 container..." -ForegroundColor Yellow
+            docker-compose build gocd-agent-2        # rebuilds only agent-2, uses cache
+            docker-compose up -d gocd-agent-2        # restarts it
             Write-Host "Press Enter to continue..." -ForegroundColor Yellow
             Read-Host
         }
         "5.4" { 
-            Write-Host "Starting gocd-agent-3 container..." -ForegroundColor Yellow
-            docker-compose up -d --build gocd-agent-3
+            Write-Host "Rebuilding and starting gocd-agent-3 container..." -ForegroundColor Yellow
+            docker-compose build gocd-agent-3        # rebuilds only agent-3, uses cache
+            docker-compose up -d gocd-agent-3        # restarts it
             Write-Host "Press Enter to continue..." -ForegroundColor Yellow
             Read-Host
         }
