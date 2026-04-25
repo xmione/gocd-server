@@ -2,23 +2,34 @@
 # Pulls the pre-built base image from ghcr.io.
 # The base image contains the slow tooling (OpenSSL cross-compilation, etc.)
 # This image builds fast on every go.ps1 option 1.6 run.
+# Dockerfile.agent.solvpn
 FROM ghcr.io/xmione/solvpn-build-base:latest
 
 USER root
 
-# Install GoCD agent dependencies
+# Install GoCD agent dependencies (already cached)
 RUN apk add --no-cache ca-certificates openssl curl docker gnupg jq docker-compose nodejs npm
 
-# Install GitHub CLI
+# Install GitHub CLI (already cached)
 RUN apk add --no-cache git && \
     wget -O gh.tar.gz https://github.com/cli/cli/releases/download/v2.40.1/gh_2.40.1_linux_amd64.tar.gz && \
     tar -xzf gh.tar.gz && \
     mv gh_2.40.1_linux_amd64/bin/gh /usr/local/bin/ && \
     rm -rf gh_2.40.1_linux_amd64 gh.tar.gz
 
-# Install NSIS for building Windows .exe installers
-RUN apk add --no-cache nsis
-    
+# Install NSIS (complete with Windows stubs – uses existing MinGW)
+RUN apk add --no-cache scons g++ gcc zlib-dev && \
+    wget -O /tmp/nsis-src.tar.bz2 \
+        "https://sourceforge.net/projects/nsis/files/NSIS%203/3.09/nsis-3.09-src.tar.bz2/download" && \
+    tar -xjf /tmp/nsis-src.tar.bz2 -C /tmp && \
+    cd /tmp/nsis-3.09-src && \
+    scons XGCC_W32_PREFIX=x86_64-w64-mingw32- \
+        CROSS_COMPILE=x86_64-w64-mingw32- \
+        SKIPPLUGINS=all SKIPUTILS=all SKIPMISC=all \
+        NSIS_CONFIG_CONST_DATA=no PREFIX=/usr/local install && \
+    rm -rf /tmp/nsis-3.09-src /tmp/nsis-src.tar.bz2 && \
+    ln -sf /usr/local/bin/makensis /usr/local/bin/makensis
+
 # Add entrypoint script
 COPY Scripts/agent-entrypoint.sh /usr/local/bin/agent-entrypoint.sh
 RUN chmod +x /usr/local/bin/agent-entrypoint.sh

@@ -224,21 +224,21 @@ do {
         }
         "5.2" { 
             Write-Host "Rebuilding and starting gocd-agent-1 container..." -ForegroundColor Yellow
-            docker-compose build gocd-agent-1        # rebuilds only agent-1, uses cache
+            docker-compose build --no-cache gocd-agent-1   # forced rebuild to use new mirror
             docker-compose up -d gocd-agent-1        # restarts it
             Write-Host "Press Enter to continue..." -ForegroundColor Yellow
             Read-Host
         }
         "5.3" { 
             Write-Host "Rebuilding and starting gocd-agent-2 container..." -ForegroundColor Yellow
-            docker-compose build gocd-agent-2        # rebuilds only agent-2, uses cache
+            docker-compose build --no-cache gocd-agent-2   # forced rebuild to use new mirror
             docker-compose up -d gocd-agent-2        # restarts it
             Write-Host "Press Enter to continue..." -ForegroundColor Yellow
             Read-Host
         }
         "5.4" { 
             Write-Host "Rebuilding and starting gocd-agent-3 container..." -ForegroundColor Yellow
-            docker-compose build gocd-agent-3        # rebuilds only agent-3, uses cache
+            docker-compose build --no-cache gocd-agent-3   # forced rebuild to use new mirror
             docker-compose up -d gocd-agent-3        # restarts it
             Write-Host "Press Enter to continue..." -ForegroundColor Yellow
             Read-Host
