@@ -35,6 +35,7 @@ do {
     Write-Host "   4.4. View system resources" -ForegroundColor White
     Write-Host "   4.5. Clean up Docker resources" -ForegroundColor White
     Write-Host "   4.6. Print Project Folder Structure" -ForegroundColor White
+    Write-Host "   4.7. Sync Master with Feature Branch" -ForegroundColor White
     Write-Host ""
     Write-Host "5. TROUBLE-SHOOT CONTAINERS" -ForegroundColor Cyan
     Write-Host "   5.1. Rebuild and Re-start gocd-server container" -ForegroundColor White
@@ -210,6 +211,16 @@ do {
         }
         "4.6" { 
             pnpm run pfs
+            Write-Host "Press Enter to continue..." -ForegroundColor Yellow
+            Read-Host
+        }
+        "4.7" { 
+            $featureBranch = Read-Host "Enter feature branch name to sync with master (e.g., 'my-feature')"
+            if ([string]::IsNullOrWhiteSpace($featureBranch)) {
+                Write-Host "Feature branch name cannot be empty." -ForegroundColor Red
+            } else {
+                npm run master-feature-git-sync -- -FeatureBranch $featureBranch
+            }
             Write-Host "Press Enter to continue..." -ForegroundColor Yellow
             Read-Host
         }

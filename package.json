@@ -12,7 +12,8 @@
     "encryptenvfiles": "echo 'Encrypting .env files...' && powershell -ExecutionPolicy Bypass -Command \". .\\Scripts\\encryptenvfiles.ps1\"",
     "decryptenvfiles": "echo 'Decrypting .env files...' && powershell -ExecutionPolicy Bypass -Command \". .\\Scripts\\decryptenvfiles.ps1\"",
     "test": "echo 'Error: no test specified' && exit 1",
-    "setup-base-image": "echo 'Setting up SolVPN build base image...' && powershell -ExecutionPolicy Bypass -File Scripts\\setup-base-image.ps1"
+    "setup-base-image": "echo 'Setting up SolVPN build base image...' && powershell -ExecutionPolicy Bypass -File Scripts\\setup-base-image.ps1",
+    "master-feature-git-sync": "echo 'Syncing master with feature branch...' && powershell -ExecutionPolicy Bypass -File Scripts\\master-feature-git-sync.ps1"
   },
   "repository": {
     "type": "git",
