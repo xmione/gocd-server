@@ -222,16 +222,7 @@
             <tasks>
               <exec command="bash">
                 <arg>-c</arg>
-                <arg>
-                  echo "========================================================" &amp;&amp;
-                  echo "BUILDING &amp; PUSHING SOLVPN WEB IMAGE" &amp;&amp;
-                  echo "========================================================" &amp;&amp;
-                  cd /solvpn &amp;&amp;
-                  echo "$GITHUB_TOKEN" | docker login ghcr.io -u xmione --password-stdin &amp;&amp;
-                  docker build -t ghcr.io/xmione/solvpn-web:latest -f Dockerfile.web . &amp;&amp;
-                  docker push ghcr.io/xmione/solvpn-web:latest &amp;&amp;
-                  echo "✅ Web image published: ghcr.io/xmione/solvpn-web:latest"
-                </arg>
+                <arg>cd /solvpn/Scripts &amp;&amp; ./deploy_web_image.sh</arg>
               </exec>
             </tasks>
           </job>
