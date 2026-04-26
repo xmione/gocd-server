@@ -71,6 +71,8 @@ services:
       dockerfile: Dockerfile.agent.solvpn
     container_name: gocd-agent-3
     restart: none
+    env_file:
+      - .env.docker
     environment:
       - GO_SERVER_URL=http://gocd-server:8153/go
       - AGENT_AUTO_REGISTER_KEY=default
