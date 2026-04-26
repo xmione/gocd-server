@@ -21,13 +21,16 @@
         <user>admin</user>
       </admins>
     </security>
+    <artifacts>
+      <artifactsDir>artifacts</artifactsDir>
+    </artifacts>
   </server>
 
   <pipelines group="defaultGroup">
 
     <pipeline name="pearl-hello-world">
       <materials>
-        <git url="__GIT_REPO_URL_WITH_CREDENTIALS__" branch="master" />
+        <git url="__PEARL_REPO_URL_WITH_CREDENTIALS__" branch="master" />
       </materials>
       <stage name="build">
         <jobs>
@@ -50,7 +53,6 @@
                 </arg>
               </exec>
 
-              <!-- ORIGINAL TASKS -->
               <!-- Debug task to verify directory -->
               <exec command="bash">
                 <arg>-c</arg>
@@ -84,7 +86,7 @@
         </jobs>
       </stage>
     </pipeline>
-      
+
     <pipeline name="badminton_court">
       <materials>
         <git url="__GIT_REPO_URL_WITH_CREDENTIALS__" branch="master" />
@@ -97,13 +99,13 @@
               <resource>badminton_court</resource>
             </resources>
             <tasks>
-              <!-- STEP 1: Decrypt Environment files (This is fine as it doesn't use Docker) -->
+              <!-- STEP 1: Decrypt Environment files -->
               <exec command="bash">
                 <arg>-c</arg>
                 <arg>cd /badminton_court &amp;&amp; node Scripts/docker-menu.js 13.6</arg>
               </exec>
 
-              <!-- STEP 2: Clean up Containers and Images (Using direct commands) -->
+              <!-- STEP 2: Clean up Containers and Images -->
               <exec command="bash">
                 <arg>-c</arg>
                 <arg>
@@ -117,7 +119,7 @@
                 </arg>
               </exec>
 
-              <!-- STEP 3: Build and start dev profile containers (Using direct commands) -->
+              <!-- STEP 3: Build and start dev profile containers -->
               <exec command="bash">
                 <arg>-c</arg>
                 <arg>
@@ -128,7 +130,7 @@
                   docker-compose --env-file .env.docker --profile dev --progress=plain build --no-cache
                 </arg>
               </exec>
-              
+
               <exec command="bash">
                 <arg>-c</arg>
                 <arg>
@@ -148,13 +150,12 @@
 
     <pipeline name="solvpn-deployment">
       <materials>
-        <git url="https://github.com/your-username/solvpn.git" branch="main">
-           <password>{{SECRET:[github][token]}}</password>
-        </git>
+        <git url="__SOLVPN_REPO_URL_WITH_CREDENTIALS__" branch="master" />
       </materials>
-      <stage name="build">
+
+      <stage name="Build_and_Package">
         <jobs>
-          <job name="build_engine_and_ui">
+          <job name="compile_windows_dist">
             <resources>
               <resource>docker</resource>
               <resource>solvpn</resource>
@@ -162,40 +163,72 @@
             <tasks>
               <exec command="bash">
                 <arg>-c</arg>
-                <arg>
-                  echo "========================================================" &&
-                  echo "CLEANING UP SolVPN WORKSPACE" &&
-                  echo "========================================================" &&
-                  rm -rf /solvpn/build/* || true
-                </arg>
+                <arg>cd /solvpn/Scripts &amp;&amp; ./build_solvpn.sh</arg>
               </exec>
+            </tasks>
+            <artifacts>
+              <artifact type="build" src="build/*" dest="solvpn_windows_release/" />
+            </artifacts>
+          </job>
+        </jobs>
+      </stage>
 
+      <stage name="Create_Installer">
+        <jobs>
+          <job name="build_installer">
+            <resources>
+              <resource>docker</resource>
+              <resource>solvpn</resource>
+            </resources>
+            <tasks>
+              <fetchartifact artifactOrigin="gocd" pipeline="solvpn-deployment" stage="Build_and_Package" job="compile_windows_dist" srcdir="solvpn_windows_release" dest="build" />
               <exec command="bash">
                 <arg>-c</arg>
-                <arg>
-                  echo "========================================================" &&
-                  echo "COMPILING solvpn_engine.dll" &&
-                  echo "========================================================" &&
-                  cd /solvpn/engine &&
-                  gcc -shared -o ../build/solvpn_engine.dll vpn_server.c -lssl -lcrypto
-                </arg>
+                <arg>cd /solvpn/Scripts &amp;&amp; ./create_installer.sh</arg>
               </exec>
+            </tasks>
+            <artifacts>
+              <artifact type="build" src="installer_output/*" dest="solvpn_installer/" />
+            </artifacts>
+          </job>
+        </jobs>
+      </stage>
 
+      <stage name="Publish_Release">
+        <jobs>
+          <job name="publish_github_release">
+            <resources>
+              <resource>docker</resource>
+              <resource>solvpn</resource>
+            </resources>
+            <tasks>
+              <fetchartifact artifactOrigin="gocd" pipeline="solvpn-deployment" stage="Create_Installer" job="build_installer" srcdir="solvpn_installer" dest="installer_output" />
               <exec command="bash">
                 <arg>-c</arg>
-                <arg>
-                  echo "========================================================" &&
-                  echo "PACKAGING PYTHON FLET UI" &&
-                  echo "========================================================" &&
-                  cd /solvpn/ui &&
-                  pip install -r requirements.txt &&
-                  flet pack main.py --name "SolVPN_Client" --dist ../build/
-                </arg>
+                <arg>cd /solvpn/Scripts &amp;&amp; ./publish_release.sh</arg>
               </exec>
             </tasks>
           </job>
         </jobs>
       </stage>
+
+      <stage name="Deploy_Website">
+        <jobs>
+          <job name="build_and_push_web_image">
+            <resources>
+              <resource>docker</resource>
+              <resource>solvpn</resource>
+            </resources>
+            <tasks>
+              <exec command="bash">
+                <arg>-c</arg>
+                <arg>cd /solvpn/Scripts &amp;&amp; ./deploy_web_image.sh</arg>
+              </exec>
+            </tasks>
+          </job>
+        </jobs>
+      </stage>
+
     </pipeline>
 
   </pipelines>

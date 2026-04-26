@@ -5,6 +5,16 @@ Write-Host "====================================================================
 docker logs gocd-server 2>&1 | Select-String -Pattern "(ERROR|Exception|failed|STDERR)" -CaseSensitive:$false -Context 3,5
 
 Write-Host "====================================================================================" -ForegroundColor Yellow
-Write-Host "gocd-agent container errors:" -ForegroundColor Yellow
+Write-Host "gocd-agent-1 container errors:" -ForegroundColor Yellow
 Write-Host "====================================================================================" -ForegroundColor Yellow
-docker logs gocd-agent 2>&1 | Select-String -Pattern "(ERROR|Exception|failed|STDERR)" -CaseSensitive:$false -Context 3,5
+docker logs gocd-agent-1 2>&1 | Select-String -Pattern "(ERROR|Exception|failed|STDERR)" -CaseSensitive:$false -Context 3,5
+
+Write-Host "====================================================================================" -ForegroundColor Yellow
+Write-Host "gocd-agent-2 container errors:" -ForegroundColor Yellow
+Write-Host "====================================================================================" -ForegroundColor Yellow
+docker logs gocd-agent-2 2>&1 | Select-String -Pattern "(ERROR|Exception|failed|STDERR)" -CaseSensitive:$false -Context 3,5
+
+Write-Host "====================================================================================" -ForegroundColor Yellow
+Write-Host "gocd-agent-3 container errors:" -ForegroundColor Yellow
+Write-Host "====================================================================================" -ForegroundColor Yellow
+docker logs gocd-agent-3 2>&1 | Select-String -Pattern "(ERROR|Exception|failed|STDERR)" -CaseSensitive:$false -Context 3,5

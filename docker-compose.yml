@@ -4,7 +4,7 @@ services:
   gocd-server:
     build: .
     container_name: gocd-server
-    restart: unless-stopped
+    restart: none
     ports:
       - "8153:8153"
       - "8154:8154"
@@ -14,6 +14,7 @@ services:
       - GO_SERVER_SSL_PORT=8154
       - GO_SERVER_SSL_CERTIFICATE=/etc/go/server/server.crt
       - GO_SERVER_SSL_PRIVATE_KEY=/etc/go/server/server.key
+      - TINI_SUBREAPER=true
     volumes:
       - gocd_data:/godata
       - gocd_home:/home/go
@@ -22,13 +23,14 @@ services:
       - ./certs/keystore.p12:/tmp/keystore.p12:ro
       - ./config/cruise-config.xml:/tmp/cruise-config.xml.template:ro
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./apps.json:/tmp/apps.json:ro
 
   gocd-agent-1:
     build:
       context: .
       dockerfile: Dockerfile.agent
     container_name: gocd-agent-1
-    restart: unless-stopped
+    restart: none
     environment:
       - GO_SERVER_URL=http://gocd-server:8153/go
       - AGENT_AUTO_REGISTER_KEY=default
@@ -48,7 +50,7 @@ services:
       context: .
       dockerfile: Dockerfile.agent
     container_name: gocd-agent-2
-    restart: unless-stopped
+    restart: none
     environment:
       - GO_SERVER_URL=http://gocd-server:8153/go
       - AGENT_AUTO_REGISTER_KEY=default
@@ -66,9 +68,11 @@ services:
   gocd-agent-3:
     build:
       context: .
-      dockerfile: Dockerfile.agent
+      dockerfile: Dockerfile.agent.solvpn
     container_name: gocd-agent-3
-    restart: unless-stopped
+    restart: none
+    env_file:
+      - .env.docker
     environment:
       - GO_SERVER_URL=http://gocd-server:8153/go
       - AGENT_AUTO_REGISTER_KEY=default

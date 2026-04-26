@@ -1,27 +1,20 @@
-# Dockerfile.agent
-# Used by gocd-agent-1 (pearl-hello-world) and gocd-agent-2 (badminton_court)
-FROM gocd/gocd-agent-alpine:v25.4.0
+# Dockerfile.agent.solvpn
+# Pulls the pre-built base image from ghcr.io.
+# The base image contains the slow tooling (OpenSSL cross-compilation, etc.)
+# This image builds fast on every go.ps1 option 1.6 run.
+FROM ghcr.io/xmione/solvpn-build-base:latest
 
 USER root
 
-# Install base dependencies
-RUN apk add --no-cache ca-certificates openssl curl docker gnupg
+# Install GoCD agent dependencies
+RUN apk add --no-cache ca-certificates openssl curl docker gnupg jq docker-compose nodejs npm
 
-# Install jq
-RUN apk add --no-cache jq
-
-# Install GitHub CLI (gh)
+# Install GitHub CLI
 RUN apk add --no-cache git && \
     wget -O gh.tar.gz https://github.com/cli/cli/releases/download/v2.40.1/gh_2.40.1_linux_amd64.tar.gz && \
     tar -xzf gh.tar.gz && \
     mv gh_2.40.1_linux_amd64/bin/gh /usr/local/bin/ && \
     rm -rf gh_2.40.1_linux_amd64 gh.tar.gz
-
-# Install docker-compose
-RUN apk add --no-cache docker-compose
-
-# Install Node.js
-RUN apk add --no-cache nodejs npm
 
 # Add entrypoint script
 COPY Scripts/agent-entrypoint.sh /usr/local/bin/agent-entrypoint.sh

@@ -35,12 +35,13 @@ do {
     Write-Host "   4.4. View system resources" -ForegroundColor White
     Write-Host "   4.5. Clean up Docker resources" -ForegroundColor White
     Write-Host "   4.6. Print Project Folder Structure" -ForegroundColor White
+    Write-Host "   4.7. Sync Master with Feature Branch" -ForegroundColor White
     Write-Host ""
     Write-Host "5. TROUBLE-SHOOT CONTAINERS" -ForegroundColor Cyan
-    Write-Host "   5.1. Start gocd-server container" -ForegroundColor White
-    Write-Host "   5.2. Start gocd-agent-1 container" -ForegroundColor White
-    Write-Host "   5.3. Start gocd-agent-2 container" -ForegroundColor White
-    Write-Host "   5.4. Start gocd-agent-3 container" -ForegroundColor White
+    Write-Host "   5.1. Rebuild and Re-start gocd-server container" -ForegroundColor White
+    Write-Host "   5.2. Rebuild and Re-start gocd-agent-1 container" -ForegroundColor White
+    Write-Host "   5.3. Rebuild and Re-start gocd-agent-2 container" -ForegroundColor White
+    Write-Host "   5.4. Rebuild and Re-start gocd-agent-3 container" -ForegroundColor White
     Write-Host "   5.5. View container logs" -ForegroundColor White
     Write-Host ""
     Write-Host "6. Exit" -ForegroundColor Red
@@ -213,29 +214,43 @@ do {
             Write-Host "Press Enter to continue..." -ForegroundColor Yellow
             Read-Host
         }
+        "4.7" { 
+            $featureBranch = Read-Host "Enter feature branch name to sync with master (e.g., 'my-feature')"
+            if ([string]::IsNullOrWhiteSpace($featureBranch)) {
+                Write-Host "Feature branch name cannot be empty." -ForegroundColor Red
+            } else {
+                npm run master-feature-git-sync -- -FeatureBranch $featureBranch
+            }
+            Write-Host "Press Enter to continue..." -ForegroundColor Yellow
+            Read-Host
+        }
         
         # Troubleshoot Containers
         "5.1" { 
-            Write-Host "Starting gocd-server container..." -ForegroundColor Yellow
-            docker-compose up -d --build gocd-server
+            Write-Host "Rebuilding and starting gocd-server container..." -ForegroundColor Yellow
+            docker-compose build gocd-server        # rebuilds only gocd-server, uses cache
+            docker-compose up -d gocd-server        # restarts it
             Write-Host "Press Enter to continue..." -ForegroundColor Yellow
             Read-Host
         }
         "5.2" { 
-            Write-Host "Starting gocd-agent-1 container..." -ForegroundColor Yellow
-            docker-compose up -d --build gocd-agent-1
+            Write-Host "Rebuilding and starting gocd-agent-1 container..." -ForegroundColor Yellow
+            docker-compose build --no-cache gocd-agent-1   # forced rebuild to use new mirror
+            docker-compose up -d gocd-agent-1        # restarts it
             Write-Host "Press Enter to continue..." -ForegroundColor Yellow
             Read-Host
         }
         "5.3" { 
-            Write-Host "Starting gocd-agent-2 container..." -ForegroundColor Yellow
-            docker-compose up -d --build gocd-agent-2
+            Write-Host "Rebuilding and starting gocd-agent-2 container..." -ForegroundColor Yellow
+            docker-compose build --no-cache gocd-agent-2   # forced rebuild to use new mirror
+            docker-compose up -d gocd-agent-2        # restarts it
             Write-Host "Press Enter to continue..." -ForegroundColor Yellow
             Read-Host
         }
         "5.4" { 
-            Write-Host "Starting gocd-agent-3 container..." -ForegroundColor Yellow
-            docker-compose up -d --build gocd-agent-3
+            Write-Host "Rebuilding and starting gocd-agent-3 container..." -ForegroundColor Yellow
+            docker-compose build --no-cache gocd-agent-3   # forced rebuild to use new mirror
+            docker-compose up -d gocd-agent-3        # restarts it
             Write-Host "Press Enter to continue..." -ForegroundColor Yellow
             Read-Host
         }
