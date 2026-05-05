@@ -44,10 +44,10 @@ do {
     Write-Host "   5.4. Rebuild and Re-start gocd-agent-3 container" -ForegroundColor White
     Write-Host "   5.5. View container logs" -ForegroundColor White
     Write-Host ""
-    Write-Host "6. Exit" -ForegroundColor Red
+    Write-Host "0. Exit" -ForegroundColor Red
     Write-Host ""
 
-    $choice = Read-Host "Select an option (e.g., 1.1, 2.3, or 5)"
+    $choice = Read-Host "Select an option (e.g., 1.1, 2.3, or 0 to exit)"
 
     switch ($choice) {
         # Container Management
