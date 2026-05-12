@@ -64,14 +64,7 @@
             <tasks>
               <exec command="bash">
                 <arg>-c</arg>
-                <arg><![CDATA[
-                  gcloud compute ssh gocd-deploy-target \
-                    --project __GCP_PROJECT_ID__ \
-                    --zone __GCP_ZONE__ \
-                    --ssh-key-file=/secret/agent-key \
-                    --quiet \
-                    --command "cd /app/badminton_court && git pull && node Scripts/deploy-staging.js '__GITHUB_TOKEN__'"
-                ]]></arg>
+                <arg>/badminton_court/Scripts/deploy.js staging __GITHUB_TOKEN__</arg>
               </exec>
             </tasks>
           </job>
@@ -94,14 +87,7 @@
             <tasks>
               <exec command="bash">
                 <arg>-c</arg>
-                <arg><![CDATA[
-                  gcloud compute ssh gocd-deploy-target \
-                    --project __GCP_PROJECT_ID__ \
-                    --zone __GCP_ZONE__ \
-                    --ssh-key-file=/secret/agent-key \
-                    --quiet \
-                    --command "cd /app/badminton_court && git pull && node Scripts/deploy-production.js '__GITHUB_TOKEN__'"
-                ]]></arg>
+                <arg>/badminton_court/Scripts/deploy.js production __GITHUB_TOKEN__</arg>
               </exec>
             </tasks>
           </job>
