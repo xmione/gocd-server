@@ -1,6 +1,6 @@
 <!-- config/cruise-config.xml -->
 <cruise schemaVersion="139">
-  <server agentAutoRegisterKey="default" serverId="__SERVER_ID__" tokenGenerationKey="__TOKEN_GENERATION_KEY__" siteUrl="__SITE_URL__">
+  <server agentAutoRegisterKey="default" serverId="__SERVER_ID__" tokenGenerationKey="__TOKEN_GENERATION_KEY__">
     <security>
       <authConfigs>
         <authConfig id="password_file" pluginId="cd.go.authentication.passwordfile">
@@ -119,7 +119,21 @@
             <tasks>
               <exec command="bash">
                 <arg>-c</arg>
-                <arg><![CDATA[gcloud compute ssh "__GCP_VM_NAME__" --project "__GCP_PROJECT_ID__" --zone "__GCP_ZONE__" --quiet --command "export GITHUB_TOKEN='__GITHUB_TOKEN__' && sudo chown -R \$USER /app/badminton_court && git config --global --add safe.directory /app/badminton_court && cd /app/badminton_court && git pull && node Scripts/generate-env.js development .env.staging && echo '__GITHUB_TOKEN__' | sudo docker login ghcr.io -u xmione --password-stdin && sudo docker compose -f docker-compose.vm.yml --env-file .env.staging --profile staging pull && sudo docker compose -f docker-compose.vm.yml --env-file .env.staging --profile staging up -d --build"]]></arg>
+                <arg><![CDATA[
+    ssh -i /secret/agent-key \
+        -o StrictHostKeyChecking=no \
+        -o UserKnownHostsFile=/dev/null \
+        sol-i@35.230.13.215 \
+        "export GITHUB_TOKEN='__GITHUB_TOKEN__' &&
+         sudo chown -R \$USER /app/badminton_court &&
+         git config --global --add safe.directory /app/badminton_court &&
+         cd /app/badminton_court &&
+         git pull &&
+         node Scripts/generate-env.js development .env.staging &&
+         echo '__GITHUB_TOKEN__' | sudo docker login ghcr.io -u xmione --password-stdin &&
+         sudo docker compose -f docker-compose.vm.yml --env-file .env.staging --profile staging pull &&
+         sudo docker compose -f docker-compose.vm.yml --env-file .env.staging --profile staging up -d --build"
+  ]]></arg>
               </exec>
             </tasks>
           </job>
