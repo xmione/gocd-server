@@ -213,6 +213,12 @@ async function showMenu() {
         console.log('   6.12. Create VM from saved YAML');
         console.log('   6.13. Recreate fresh VM (export → delete → create)');
         console.log('   6.14. Run full post‑creation setup (firewall, SSH, secrets, tools, check)'); 
+        console.log('   6.15. Show Docker containers on VM (staging/production)');
+        console.log('   6.16. View logs of a service on VM');
+        console.log('   6.17. Restart a service on VM');
+        console.log('   6.18. Open staging app in browser');
+        console.log('   6.19. Health check staging app');
+        console.log('   6.20. Clear SSH host key for VM');
         console.log('');
         console.log('\x1b[36m0. Exit\x1b[0m');
         console.log('');
@@ -537,7 +543,72 @@ async function showMenu() {
                 log('✅ Setup completed.', '\x1b[32m');
                 await pause();
                 break;
-
+            case '6.15': {
+                const keyPath = path.join(__dirname, 'agent-key');
+                const sshUser = process.env.VM_SSH_USER || 'xmnione';
+                const vmIp = process.env.GCP_VM_IP || '136.109.209.69';
+                const sshCmd = `ssh -i "${keyPath}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${sshUser}@${vmIp} "docker ps --format 'table {{.Names}}\\t{{.Status}}\\t{{.Ports}}'"`;
+                sh(sshCmd);
+                await pause();
+                break;
+            }
+            case '6.16': {
+                const keyPath = path.join(__dirname, 'agent-key');
+                const sshUser = process.env.VM_SSH_USER || 'xmnione';
+                const vmIp = process.env.GCP_VM_IP || '136.109.209.69';
+                const service = await ask('Service name (e.g., badminton_web_1): ');
+                if (service) {
+                    // Show logs interactively
+                    sh(`ssh -i "${keyPath}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${sshUser}@${vmIp} "docker logs -f --tail 50 ${service}"`);
+                }
+                await pause();
+                break;
+            }
+            case '6.17': {
+                const keyPath = path.join(__dirname, 'agent-key');
+                const sshUser = process.env.VM_SSH_USER || 'xmnione';
+                const vmIp = process.env.GCP_VM_IP || '136.109.209.69';
+                const service = await ask('Service name to restart: ');
+                if (service) {
+                    sh(`ssh -i "${keyPath}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${sshUser}@${vmIp} "docker restart ${service}"`);
+                    log(`${service} restarted.`, '\x1b[32m');
+                }
+                await pause();
+                break;
+            }
+            case '6.18': {
+                // Open staging app – uses VM's external IP
+                const stagingUrl = `http://${process.env.GCP_VM_IP || '136.109.209.69'}:8001`; // staging port
+                openUrl(stagingUrl);
+                log(`Opening staging app: ${stagingUrl}`, '\x1b[32m');
+                await pause();
+                break;
+            }
+            case '6.19': {
+                // Health check – curl the app from inside the VM (avoids firewall issues)
+                const keyPath = path.join(__dirname, 'agent-key');
+                const sshUser = process.env.VM_SSH_USER || 'xmnione';
+                const vmIp = process.env.GCP_VM_IP || '136.109.209.69';
+                log('Performing health check on staging (port 8001)...', '\x1b[33m');
+                sh(`ssh -i "${keyPath}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${sshUser}@${vmIp} "curl -s -o /dev/null -w '%{http_code}' http://localhost:8001/ || echo 'Failed'"`);
+                await pause();
+                break;
+            }
+            case '6.20': {
+                // Clear cached SSH host key for the VM IP
+                const vmIp = process.env.GCP_VM_IP || '136.109.209.69';
+                log(`Removing cached host key for ${vmIp}...`, '\x1b[33m');
+                if (os.platform() === 'win32') {
+                    // Use ssh-keygen from Git Bash or Windows OpenSSH
+                    sh(`ssh-keygen -R ${vmIp}`);
+                } else {
+                    sh(`ssh-keygen -R ${vmIp}`);
+                }
+                log('Host key cleared. Next connection will accept the new key.', '\x1b[32m');
+                await pause();
+                break;
+            }
+            
             case '0':
                 rl.close();
                 process.exit(0);
