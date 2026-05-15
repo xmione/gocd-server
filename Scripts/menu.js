@@ -148,65 +148,110 @@ function openUrl(url) {
 }
 
 async function getSessionCookie() {
+    const loginPage = `${GOCD_BASE}/go/auth/login`;
+    const loginAction = `${GOCD_BASE}/go/auth/security_check`;
+
     try {
-        // Try the REST API authentication endpoint – returns JSESSIONID in Set-Cookie
+        // 1. Fetch the login page (this also gives us any CSRF cookie)
         const result = execSync(
-            `docker exec gocd-server curl -s -i -u "${GOCD_USER}:${GOCD_PASS}" -X POST "${GOCD_BASE}/go/api/auth/login"`,
+            `docker exec gocd-server curl -s -i -c /tmp/gocd_cookies.txt "${loginPage}"`,
             { encoding: 'utf8', stdio: 'pipe' }
         );
-        const match = result.match(/JSESSIONID=([^;]+)/);
-        if (!match) {
-            // Fallback: try the older authentication endpoint
-            const alt = execSync(
-                `docker exec gocd-server curl -s -i -u "${GOCD_USER}:${GOCD_PASS}" -X POST "${GOCD_BASE}/go/api/authentication/login"`,
-                { encoding: 'utf8', stdio: 'pipe' }
-            );
-            const altMatch = alt.match(/JSESSIONID=([^;]+)/);
-            if (!altMatch) throw new Error('No JSESSIONID in response');
-            return altMatch[1];
+
+        // 2. Try to extract the CSRF token from the page HTML
+        let csrfToken = null;
+        const csrfMatch = result.match(/name="_csrf"\s+value="([^"]+)"/);
+        if (csrfMatch) {
+            csrfToken = csrfMatch[1];
+        } else {
+            // Maybe it's in the cookie jar as XSRF-TOKEN
+            try {
+                const cookieRaw = execSync(
+                    `docker exec gocd-server cat /tmp/gocd_cookies.txt`,
+                    { encoding: 'utf8', stdio: 'pipe' }
+                );
+                const xsrfMatch = cookieRaw.match(/XSRF-TOKEN\s+(\S+)/);
+                if (xsrfMatch) {
+                    csrfToken = xsrfMatch[1];
+                }
+            } catch (e) { /* ignore */ }
         }
-        return match[1];
+
+        // If no CSRF token found, we'll try without it (some GoCD versions don't require it)
+        let postData = `username=${GOCD_USER}&password=${encodeURIComponent(GOCD_PASS)}`;
+        if (csrfToken) {
+            postData += `&_csrf=${csrfToken}`;
+        }
+
+        // 3. Submit the login form, following any redirects, and save the session cookie
+        execSync(
+            `docker exec gocd-server curl -s -b /tmp/gocd_cookies.txt -c /tmp/gocd_cookies.txt ` +
+            `-L -d "${postData}" "${loginAction}"`,
+            { encoding: 'utf8', stdio: 'pipe' }
+        );
+
+        // 4. Extract JSESSIONID from the cookie jar
+        const cookieJar = execSync(
+            `docker exec gocd-server cat /tmp/gocd_cookies.txt`,
+            { encoding: 'utf8', stdio: 'pipe' }
+        );
+        const sessionMatch = cookieJar.match(/JSESSIONID\s+(\S+)/);
+        if (sessionMatch) {
+            return sessionMatch[1];
+        }
     } catch (e) {
         log('⚠ Automatic login failed – falling back to manual cookie.', '\x1b[33m');
-        return null;
     }
+    return null;
 }
 
 async function triggerPipelineInteractively() {
     const inquirer = (await import('inquirer')).default;
-
-    const pipelines = [
-        'badminton_court-artifacts',
-        'badminton_court-staging',
-        'badminton_court-production'
-    ];
-
-    // --- pause global readline before using inquirer ---
     rl.pause();
 
+    // 1. Read pipeline names from cruise-config.xml
+    const configPath = path.join(__dirname, '..', 'config', 'cruise-config.xml');
+    let pipelines = [];
+    try {
+        const xml = fs.readFileSync(configPath, 'utf8');
+        const regex = /<pipeline\s+[^>]*name\s*=\s*["']([^"']+)["'][^>]*>/gi;
+        let match;
+        while ((match = regex.exec(xml)) !== null) {
+            pipelines.push(match[1]);
+        }
+    } catch (e) {
+        rl.resume();
+        log('❌ Could not read cruise-config.xml.', '\x1b[31m');
+        console.error(e.message);
+        await ask('Press Enter to continue...');
+        return;
+    }
+
+    if (pipelines.length === 0) {
+        rl.resume();
+        log('No pipelines found in cruise-config.xml.', '\x1b[31m');
+        await ask('Press Enter to continue...');
+        return;
+    }
+
+    // 2. Get or ask for JSESSIONID
     let sessionCookie = process.env.GOCD_SESSION_COOKIE;
     if (!sessionCookie) {
-        log('🔐 Logging into GoCD to obtain session...', '\x1b[33m');
-        sessionCookie = await getSessionCookie();
+        const { cookie } = await inquirer.prompt({
+            type: 'input',
+            name: 'cookie',
+            message: 'Paste JSESSIONID:',
+        });
+        sessionCookie = (cookie || '').trim();
         if (!sessionCookie) {
-            log('❌ Could not log into GoCD automatically.', '\x1b[31m');
-            log('   Falling back to manual cookie entry.', '\x1b[33m');
-            const { cookie } = await inquirer.prompt({
-                type: 'input',
-                name: 'cookie',
-                message: 'Paste JSESSIONID:',
-            });
-            sessionCookie = (cookie || '').trim();
-            if (!sessionCookie) {
-                log('❌ No cookie – cannot trigger.', '\x1b[31m');
-                return;
-            }
-        } else {
-            log('✅ Logged in successfully.', '\x1b[32m');
+            rl.resume();
+            log('❌ No cookie – cannot trigger.', '\x1b[31m');
+            return;
         }
         process.env.GOCD_SESSION_COOKIE = sessionCookie;
     }
 
+    // 3. Choose pipeline
     const { selectedPipeline } = await inquirer.prompt({
         type: 'list',
         name: 'selectedPipeline',
@@ -214,9 +259,9 @@ async function triggerPipelineInteractively() {
         choices: pipelines
     });
 
-    // --- resume global readline now that inquirer is done ---
     rl.resume();
 
+    // 4. Trigger (identical to the working terminal command)
     const url = GOCD_BASE + '/go/api/pipelines/' + selectedPipeline + '/schedule';
     const curlArgs = [
         '-s', '-H', 'Accept: application/vnd.go.cd.v1+json',
@@ -228,17 +273,28 @@ async function triggerPipelineInteractively() {
         url
     ];
 
-    // No try/catch – errors bubble up to case '2.1'
-    const result = execSync('docker exec gocd-server curl ' + curlArgs.map(a => `"${a}"`).join(' '), {
-        encoding: 'utf8', stdio: 'pipe', cwd: PROJECT_ROOT
-    });
+    let result;
+    try {
+        result = execSync('docker exec gocd-server curl ' + curlArgs.map(a => `"${a}"`).join(' '), {
+            encoding: 'utf8', stdio: 'pipe', cwd: PROJECT_ROOT
+        });
+    } catch (err) {
+        // If the curl command itself fails, clear the cookie and show the error
+        process.env.GOCD_SESSION_COOKIE = '';
+        throw new Error('Connection failed: ' + (err.stderr || err.message));
+    }
+
+    // If the cookie expired, clear it and prompt again on the next run
+    if (result.includes('not authenticated')) {
+        process.env.GOCD_SESSION_COOKIE = '';
+        throw new Error(result.trim());
+    }
 
     if (!result.includes('accepted')) {
         throw new Error(result.trim());
     }
 
     log('✅ Pipeline ' + selectedPipeline + ' triggered.', '\x1b[32m');
-    // Use the global ask for pausing – now safe because rl is resumed
     await ask('Press Enter to continue...');
 }
 
