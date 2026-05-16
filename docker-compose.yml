@@ -5,6 +5,7 @@ services:
     build: .
     container_name: gocd-server
     restart: unless-stopped
+    dns: 8.8.8.8
     ports:
       - "8153:8153"
       - "8154:8154"
