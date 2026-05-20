@@ -5,6 +5,8 @@
  * Provisions the VM from scratch with a startup script that installs all
  * necessary dependencies.
  * Does NOT inject the agent's SSH key – use option 6.3 for that.
+ * Automatically falls back to an available free‑tier zone if the chosen one is full.
+ * Updates all .env files with the final IP and zone.
  *
  * For a fully automatic fresh start, use option 6.22.
  *
@@ -49,6 +51,13 @@ const STATIC_IP_NAME = 'gocd-deploy-target-ip';
 
 // Region derived from zone (e.g., us-west1-b → us-west1)
 const REGION = ZONE.substring(0, ZONE.lastIndexOf('-'));
+
+// Free‑tier zones – restricted to the SAME region to keep the static IP valid.
+// The static IP is regional; if we switch regions, the IP won't work.
+const REGIONAL_ZONES = [
+    ZONE,                             // try the user's choice first
+    `${REGION}-a`, `${REGION}-b`, `${REGION}-c`
+];
 
 // Default compute service account (this email is standard for GCP projects)
 const COMPUTE_SA = `575810712323-compute@developer.gserviceaccount.com`;
@@ -171,6 +180,57 @@ done
 echo "=== Startup script finished at $(date) ==="
 `;
 
+// ---------- Update all .env files with new IP and/or zone ----------
+function updateEnvFiles(newIp, newZone, oldIp) {
+    const badmintonDir = path.join(__dirname, '..', '..', 'badminton_court');
+    const gocdServerEnv = path.join(__dirname, '..', '.env.docker');
+
+    const files = [
+        path.join(gocdServerEnv),
+        path.join(badmintonDir, '.env.dev'),
+        path.join(badmintonDir, '.env.docker'),
+        path.join(badmintonDir, '.env.staging'),
+        path.join(badmintonDir, '.env.production')
+    ];
+
+    for (const filePath of files) {
+        if (!fs.existsSync(filePath)) continue;
+        let content = fs.readFileSync(filePath, 'utf8');
+
+        // Replace old IP everywhere (APP_DOMAIN, ALLOWED_HOSTS, GCP_VM_IP, STAGING_APP_URL, etc.)
+        if (oldIp && newIp && oldIp !== newIp) {
+            content = content.split(oldIp).join(newIp);
+            content = content.replace(/^GCP_VM_IP=.*/m, `GCP_VM_IP=${newIp}`);
+        }
+
+        // Replace zone if changed
+        if (newZone) {
+            content = content.replace(/^GCP_ZONE=.*/m, `GCP_ZONE=${newZone}`);
+        }
+
+        fs.writeFileSync(filePath, content);
+        log(`Updated ${path.basename(filePath)}`);
+    }
+}
+
+// ---------- Attempt to create VM in a specific zone ----------
+function tryCreateVM(zone) {
+    const tagsArg = TAGS.join(',');
+    const createCmd = `gcloud compute instances create ${INSTANCE_NAME} \
+        --project=${PROJECT_ID} \
+        --zone=${zone} \
+        --machine-type=${MACHINE_TYPE} \
+        --image-project=${IMAGE_PROJECT} \
+        --image-family=${IMAGE_FAMILY} \
+        --tags=${tagsArg} \
+        --address=${STATIC_IP_NAME} \
+        --scopes=https://www.googleapis.com/auth/cloud-platform \
+        --metadata-from-file startup-script=${STARTUP_SCRIPT_PATH}`;
+
+    const result = run(createCmd, { silent: true, ignoreError: true });
+    return result !== null; // null means error (zone full, etc.)
+}
+
 // ---------- Main flow ----------
 async function main() {
   log('VM Provisioning Script for badminton_court deployment', '\x1b[32m');
@@ -262,7 +322,7 @@ async function main() {
       process.exit(1);   // non‑zero exit code signals an abort
     }
     log('Deleting existing VM...', '\x1b[33m');
-    run(`gcloud compute instances delete ${INSTANCE_NAME} --zone=${ZONE} --project=${PROJECT_ID} --quiet`, { silent: true });
+    run(`gcloud compute instances delete ${INSTANCE_NAME} --zone=${ZONE} --project=${PROJECT_ID} --quiet`, { silent: false });
     log('Existing VM deleted.', '\x1b[32m');
   }
 
@@ -271,29 +331,40 @@ async function main() {
   fs.writeFileSync(STARTUP_SCRIPT_PATH, finalScript);
   log('Startup script written.', '\x1b[33m');
 
-  // Create the VM with the static IP AND the cloud-platform scope
-  log(`Creating VM ${INSTANCE_NAME} with cloud-platform scope...`, '\x1b[33m');
-  const tagsArg = TAGS.join(',');
-  const createCmd = `gcloud compute instances create ${INSTANCE_NAME} \
-      --project=${PROJECT_ID} \
-      --zone=${ZONE} \
-      --machine-type=${MACHINE_TYPE} \
-      --image-project=${IMAGE_PROJECT} \
-      --image-family=${IMAGE_FAMILY} \
-      --tags=${tagsArg} \
-      --address=${STATIC_IP_NAME} \
-      --scopes=https://www.googleapis.com/auth/cloud-platform \
-      --metadata-from-file startup-script=${STARTUP_SCRIPT_PATH}`;
-      
-  run(createCmd, { silent: true });
-  log('VM created. Waiting for it to be ready...', '\x1b[33m');
+  // Try to create VM in the desired zone, fallback to other free-tier zones
+  // (only within the same region to keep the static IP valid)
+  let createdZone = null;
+  for (const zone of REGIONAL_ZONES) {
+    // Create the VM with the static IP AND the cloud-platform scope
+    log(`Creating VM ${INSTANCE_NAME} with cloud-platform scope in zone ${zone}...`, '\x1b[33m');
+    if (tryCreateVM(zone)) {
+      createdZone = zone;
+      break;
+    }
+    log(`Zone ${zone} is unavailable or full, trying next...`, '\x1b[33m');
+  }
+
+  if (!createdZone) {
+    log('All free-tier zones in the region failed. Unable to create VM.', '\x1b[31m');
+    process.exit(1);
+  }
+
+  // If zone changed, update env files (all badminton_court files + gocd-server)
+  if (createdZone !== ZONE) {
+    log(`Zone changed from ${ZONE} to ${createdZone}. Updating .env files...`, '\x1b[33m');
+    updateEnvFiles(finalIp, createdZone, DESIRED_IP);
+  } else {
+    // Only IP might have changed, still update
+    updateEnvFiles(finalIp, null, DESIRED_IP);
+  }
 
   // Wait until VM is RUNNING
+  log('VM created. Waiting for it to be ready...', '\x1b[33m');
   let status = '';
   for (let i = 0; i < 30; i++) {
     status = run(
-      `gcloud compute instances describe ${INSTANCE_NAME} --zone=${ZONE} --project=${PROJECT_ID} --format="value(status)"`,
-      { silent: true, ignoreError: true }
+      `gcloud compute instances describe ${INSTANCE_NAME} --zone=${createdZone} --project=${PROJECT_ID} --format="value(status)"`,
+      { silent: false, ignoreError: true }
     );
     if (status && status.trim() === 'RUNNING') break;
     await new Promise(resolve => setTimeout(resolve, 10000));
@@ -310,8 +381,8 @@ async function main() {
 
   // Get the assigned IP (should be the same as finalIp)
   const vmIP = run(
-    `gcloud compute instances describe ${INSTANCE_NAME} --zone=${ZONE} --project=${PROJECT_ID} --format="value(networkInterfaces[0].accessConfigs[0].natIP)"`,
-    { silent: true }
+    `gcloud compute instances describe ${INSTANCE_NAME} --zone=${createdZone} --project=${PROJECT_ID} --format="value(networkInterfaces[0].accessConfigs[0].natIP)"`,
+    { silent: false }
   );
   
   log(`\n✅ Deployment VM ${INSTANCE_NAME} is ready.`, '\x1b[32m');
