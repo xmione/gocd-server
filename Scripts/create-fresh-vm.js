@@ -49,7 +49,7 @@ const TAGS = ['http-server', 'https-server'];
 const STARTUP_SCRIPT_PATH = path.join(__dirname, '..', 'tmp_startup_script.sh');
 const STATIC_IP_NAME = 'gocd-deploy-target-ip';
 
-// Region derived from zone (e.g., us-west1-b → us-west1)
+// Region derived from the original desired zone (e.g., us-west1-b → us-west1)
 const REGION = ZONE.substring(0, ZONE.lastIndexOf('-'));
 
 // Free‑tier zones – restricted to the SAME region to keep the static IP valid.
@@ -97,7 +97,7 @@ exec > /var/log/startup-script.log 2>&1
 
 echo "=== Startup script starting at $(date) ==="
 
-# Wait up to 5 minutes for any apt process to finish (GCP guest agent, auto-updates, etc.)
+# Wait up for any apt process to finish (GCP guest agent, auto-updates, etc.)
 echo "Waiting for apt lock to be released..."
 for i in $(seq 1 30); do
   if fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; then
@@ -203,7 +203,7 @@ function updateEnvFiles(newIp, newZone, oldIp) {
             content = content.replace(/^GCP_VM_IP=.*/m, `GCP_VM_IP=${newIp}`);
         }
 
-        // Replace zone if changed
+        // Always sync the zone to the final value
         if (newZone) {
             content = content.replace(/^GCP_ZONE=.*/m, `GCP_ZONE=${newZone}`);
         }
@@ -322,7 +322,7 @@ async function main() {
       process.exit(1);   // non‑zero exit code signals an abort
     }
     log('Deleting existing VM...', '\x1b[33m');
-    run(`gcloud compute instances delete ${INSTANCE_NAME} --zone=${ZONE} --project=${PROJECT_ID} --quiet`, { silent: false });
+    run(`gcloud compute instances delete ${INSTANCE_NAME} --zone=${ZONE} --project=${PROJECT_ID} --quiet`, { silent: true });
     log('Existing VM deleted.', '\x1b[32m');
   }
 
@@ -349,14 +349,8 @@ async function main() {
     process.exit(1);
   }
 
-  // If zone changed, update env files (all badminton_court files + gocd-server)
-  if (createdZone !== ZONE) {
-    log(`Zone changed from ${ZONE} to ${createdZone}. Updating .env files...`, '\x1b[33m');
-    updateEnvFiles(finalIp, createdZone, DESIRED_IP);
-  } else {
-    // Only IP might have changed, still update
-    updateEnvFiles(finalIp, null, DESIRED_IP);
-  }
+  // Always update all .env files with the final zone and IP
+  updateEnvFiles(finalIp, createdZone, DESIRED_IP);
 
   // Wait until VM is RUNNING
   log('VM created. Waiting for it to be ready...', '\x1b[33m');
@@ -364,9 +358,13 @@ async function main() {
   for (let i = 0; i < 30; i++) {
     status = run(
       `gcloud compute instances describe ${INSTANCE_NAME} --zone=${createdZone} --project=${PROJECT_ID} --format="value(status)"`,
-      { silent: false, ignoreError: true }
+      { silent: true, ignoreError: true }
     );
-    if (status && status.trim() === 'RUNNING') break;
+    if (status && status.trim() === 'RUNNING') {
+      log('VM status: RUNNING', '\x1b[32m');
+      break;
+    }
+    log(`Waiting for VM... (status: ${status ? status.trim() : 'unknown'})`);
     await new Promise(resolve => setTimeout(resolve, 10000));
   }
 
@@ -382,7 +380,7 @@ async function main() {
   // Get the assigned IP (should be the same as finalIp)
   const vmIP = run(
     `gcloud compute instances describe ${INSTANCE_NAME} --zone=${createdZone} --project=${PROJECT_ID} --format="value(networkInterfaces[0].accessConfigs[0].natIP)"`,
-    { silent: false }
+    { silent: true }
   );
   
   log(`\n✅ Deployment VM ${INSTANCE_NAME} is ready.`, '\x1b[32m');
