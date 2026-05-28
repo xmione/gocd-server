@@ -4,4 +4,8 @@ certs/
 diff.txt
 temp/
 env.passphrase.txt
-secrets/gcp-key.json
+
+# Secrets - ignore all, allow encrypted
+secrets/*
+!secrets/*.enc
+!secrets/.gitignore
