@@ -109,14 +109,21 @@ module.exports = {
     // 6.30 – Setup Load Balancer (humrine.com)
     '6.30': async (ctx) => {
         const inquirer = (await import('inquirer')).default;
-        const { appName } = await inquirer.prompt({
+        
+        ctx.rl.pause();
+        const { appName } = await inquirer.prompt([{
             type: 'list',
             name: 'appName',
             message: 'Select application to setup Load Balancer:',
-            choices: ['humrine', 'badminton']
-        });
+            choices: ['humrine_site', 'badminton_court']
+        }]);
+        ctx.rl.resume();
         
-        ctx.sh(`node Scripts/setup-load-balancer.js ${appName}`);
-        await ctx.pause();
+        try {
+            ctx.execSync(`node Scripts/setup-load-balancer.js ${appName}`, { stdio: 'inherit' });
+        } catch (err) {
+            console.error('\x1b[31mSetup failed:\x1b[0m', err.message);
+        }
+        await ctx.ask('\x1b[33m\nPress Enter to continue...\x1b[0m');
     },
 };

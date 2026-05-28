@@ -1,5 +1,5 @@
 {
-  "humrine": {
+  "humrine_site": {
     "domain": "${HUMRINE_DOMAIN}",
     "dnsZone": "${HUMRINE_DNS_ZONE}",
     "instanceGroup": "${HUMRINE_INSTANCE_GROUP}",
@@ -31,7 +31,7 @@
       }
     ]
   },
-  "badminton": {
+  "badminton_court": {
     "domain": "${BADMINTON_DOMAIN}",
     "dnsZone": "${BADMINTON_DNS_ZONE}",
     "instanceGroup": "${BADMINTON_INSTANCE_GROUP}",
