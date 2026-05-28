@@ -1,4 +1,8 @@
-# Node
+.env*
+certs/
+diff.txt
+temp/
+env.passphrase.txt
 node_modules/
 
 # Scripts
@@ -13,11 +17,6 @@ error-live-gocd-agent-2.log
 
 # Temp/Startup
 tmp_startup_script.sh
-
-# Secrets - ignore all, allow encrypted
-secrets/*
-!secrets/*.enc
-!secrets/.gitignore
 
 # AWS/GCP
 secrets/agent-key
