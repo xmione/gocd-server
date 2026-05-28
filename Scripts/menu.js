@@ -182,7 +182,8 @@ async function showMenu() {
             console.log('   6.26. Staging container diagnostics');               
             console.log('   6.27. Production container diagnostics');
             console.log('   6.29. SSH tunnel: access GoCD from VM');
-            console.log('   6.30. Setup Load Balancer (humrine.com)');
+            console.log('   6.30. Setup Load Balancer (Generic)');
+            console.log('   6.31. Validate Social Media Configs');
             console.log('\n\x1b[36m0. Exit\x1b[0m\n');
 
             const choice = await ask('Select an option: ');
@@ -270,7 +271,7 @@ async function showMenu() {
                 case '6.17': case '6.18': case '6.19': case '6.20':
                 case '6.21': case '6.22': case '6.23': case '6.24': 
                 case '6.25': case '6.26': case '6.27':
-                case '6.29': case '6.30':
+                case '6.29': case '6.30': case '6.31':
                     await vmSetup[choice](ctx); break;
                 case '0':
                     rl.close();

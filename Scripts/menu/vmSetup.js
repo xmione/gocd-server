@@ -126,4 +126,32 @@ module.exports = {
         }
         await ctx.ask('\x1b[33m\nPress Enter to continue...\x1b[0m');
     },
+    // 6.31 – Validate Social Media Configs
+    '6.31': async (ctx) => {
+        const inquirer = (await import('inquirer')).default;
+        
+        ctx.rl.pause();
+        const { appName, envName } = await inquirer.prompt([
+            {
+                type: 'list',
+                name: 'appName',
+                message: 'Select application:',
+                choices: ['humrine_site', 'badminton_court']
+            },
+            {
+                type: 'list',
+                name: 'envName',
+                message: 'Select environment:',
+                choices: ['staging', 'production']
+            }
+        ]);
+        ctx.rl.resume();
+        
+        try {
+            ctx.execSync(`node Scripts/setup-social-media.js ${appName} ${envName}`, { stdio: 'inherit' });
+        } catch (err) {
+            console.error('\x1b[31mValidation failed:\x1b[0m', err.message);
+        }
+        await ctx.ask('\x1b[33m\nPress Enter to continue...\x1b[0m');
+    },
 };

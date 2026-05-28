@@ -1,0 +1,22 @@
+{
+  "humrine_site": {
+    "staging": {
+      "GOOGLE_CLIENT_ID": "${HUMRINE_GOOGLE_ID_STAGING}",
+      "FACEBOOK_APP_ID": "${HUMRINE_FB_ID_STAGING}"
+    },
+    "production": {
+      "GOOGLE_CLIENT_ID": "${HUMRINE_GOOGLE_ID_PROD}",
+      "FACEBOOK_APP_ID": "${HUMRINE_FB_ID_PROD}"
+    }
+  },
+  "badminton_court": {
+    "staging": {
+      "GOOGLE_CLIENT_ID": "${BADMINTON_GOOGLE_ID_STAGING}",
+      "FACEBOOK_APP_ID": "${BADMINTON_FB_ID_STAGING}"
+    },
+    "production": {
+      "GOOGLE_CLIENT_ID": "${BADMINTON_GOOGLE_ID_PROD}",
+      "FACEBOOK_APP_ID": "${BADMINTON_FB_ID_PROD}"
+    }
+  }
+}
