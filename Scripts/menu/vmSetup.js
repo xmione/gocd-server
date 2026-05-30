@@ -108,6 +108,12 @@ module.exports = {
     '6.29': sshTunnelGoCD,
     // 6.30 – Setup Load Balancer (humrine.com)
     '6.30': async (ctx) => {
+        const answer = await ctx.ask('This will rebuild the load balancer. Continue? (y/N): ');
+        if (answer.toLowerCase() !== 'y') {
+            ctx.log('Aborted.', '\x1b[33m');
+            await ctx.ask('\x1b[33m\nPress Enter to continue...\x1b[0m');
+            return;
+        }
         try {
             ctx.execSync('node Scripts/setup-load-balancer.js humrine_site', { stdio: 'inherit' });
         } catch (err) {
