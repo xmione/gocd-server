@@ -46,6 +46,8 @@
  *  - Missing → create with HTTP protocol and correct named port.
  *  - Protocol is HTTPS → update to HTTP.
  *  - Named port is wrong → correct it.
+ *  - (NEW) Orphaned backends (in GCP but not in JSON) are deleted after the
+ *    URL map has been updated, ensuring no broken references.
  *
  * HEALTH CHECKS
  *  - Missing → create with correct request path (/prefix/ or /).
@@ -57,6 +59,8 @@
  *  - Bare‑domain host rule missing → create it with correct default + all
  *    exact and wildcard path rules.
  *  - Path rules incomplete or missing → remove and recreate host rule.
+ *  - (NEW) Global default service is always corrected to the configured
+ *    default backend, preventing wrong defaults after renames.
  *
  * FIREWALL RULES
  *  - Health‑check rule missing → create with restricted source ranges.
@@ -157,7 +161,8 @@ if (!PROJECT_ID || !GCP_ZONE || !GCP_VM_NAME) {
   process.exit(1);
 }
 
-const DEFAULT_BACKEND = conf.backends[conf.backends.length - 1].name;
+// Use explicit default backend if provided, otherwise fall back to last backend
+const DEFAULT_BACKEND = conf.defaultBackend || conf.backends[conf.backends.length - 1].name;
 
 // ----- Helpers -----
 const scriptStart = Date.now();
@@ -408,9 +413,10 @@ function ensureHealthChecks() {
   }
 }
 
-// ----- Step 3: Backend Services (HTTP) -----
+// ----- Step 3: Backend Services (HTTP) – creates/updates only, no orphan deletion -----
 function ensureBackendServices() {
   log('Step 3: Ensuring backend services exist with correct protocol and port...', '\x1b[33m');
+
   for (const b of conf.backends) {
     if (resourceExists('backend-services', b.name, '--global')) {
       const info = run(
@@ -463,6 +469,55 @@ function ensureBackendServices() {
   }
 }
 
+// ----- Step 3b: Clean up orphaned backends (called after URL map is updated) -----
+function cleanupOrphanBackends() {
+  log('Step 3b: Cleaning up orphaned backend services...', '\x1b[33m');
+
+  // Get all backend services currently in GCP
+  const existingRaw = run(
+    `gcloud compute backend-services list --global --project=${PROJECT_ID} --format="value(name)"`,
+    { silent: true, ignoreError: true }
+  );
+  const existing = existingRaw ? existingRaw.split('\n').map(n => n.trim()) : [];
+
+  // Get the names of all backends currently referenced in the URL map
+  let urlMapBackends = new Set();
+  try {
+    const json = execSync(
+      `gcloud compute url-maps describe ${conf.lbName} --project=${PROJECT_ID} --global --format="json"`,
+      { encoding: 'utf8', stdio: 'pipe' }
+    );
+    const urlMap = JSON.parse(json);
+    // defaultService
+    if (urlMap.defaultService) {
+      urlMapBackends.add(urlMap.defaultService.split('/').pop());
+    }
+    // path matchers
+    if (urlMap.pathMatchers) {
+      urlMap.pathMatchers.forEach(m => {
+        if (m.defaultService) urlMapBackends.add(m.defaultService.split('/').pop());
+        if (m.pathRules) {
+          m.pathRules.forEach(r => {
+            if (r.service) urlMapBackends.add(r.service.split('/').pop());
+          });
+        }
+      });
+    }
+  } catch (e) { /* ignore */ }
+
+  const jsonBackendNames = new Set(conf.backends.map(b => b.name));
+  for (const name of existing) {
+    if (!jsonBackendNames.has(name)) {
+      if (urlMapBackends.has(name)) {
+        log(`Skipping ${name} – still referenced by URL map (this shouldn't happen; run the script again).`, '\x1b[33m');
+      } else {
+        log(`Deleting orphaned backend service: ${name}...`);
+        run(`gcloud compute backend-services delete ${name} --global --project=${PROJECT_ID} --quiet`, { silent: true, ignoreError: true });
+      }
+    }
+  }
+}
+
 // ----- Step 4: Static IP -----
 function ensureStaticIP() {
   log('Step 4: Ensuring static IP exists...', '\x1b[33m');
@@ -492,7 +547,7 @@ async function confirmRecreateLoadBalancer() {
   return answer === 'y';
 }
 
-// ----- Step 6: URL Map (host & path rules) – corrected refresh logic -----
+// ----- Step 6: URL Map – now always ensures global default is correct -----
 function ensureURLMap() {
   log('Step 6: Ensuring URL map exists with host and path rules...', '\x1b[33m');
 
@@ -503,7 +558,17 @@ function ensureURLMap() {
     return;
   }
 
-  // URL map exists – fetch existing hosts via JSON (reliable)
+  // ---- Fix: always set the global default service to the configured default backend ----
+  const currentGlobalDefault = run(
+    `gcloud compute url-maps describe ${conf.lbName} --project=${PROJECT_ID} --global --format="value(defaultService)"`,
+    { silent: true, ignoreError: true }
+  );
+  if (currentGlobalDefault && !currentGlobalDefault.endsWith(DEFAULT_BACKEND)) {
+    log(`Updating global default service to ${DEFAULT_BACKEND}...`);
+    run(`gcloud compute url-maps set-default-service ${conf.lbName} --global --project=${PROJECT_ID} --default-service=${DEFAULT_BACKEND}`);
+  }
+
+  // Rest of existing host/path update logic
   let existingHosts = [];
   try {
     const json = execSync(
@@ -773,7 +838,7 @@ async function main() {
 
   ensureInstanceGroup();
   ensureHealthChecks();
-  ensureBackendServices();
+  ensureBackendServices();          // Step 3 – creates/updates backends, no orphan deletion
   const lbIP = ensureStaticIP();
 
   const newCertName = createVersionedCert();
@@ -789,7 +854,9 @@ async function main() {
     run(`gcloud compute url-maps delete ${conf.lbName} --global --project=${PROJECT_ID} --quiet`, { silent: true, ignoreError: true });
   }
 
-  ensureURLMap();
+  ensureURLMap();                   // Step 6 – updates the URL map (global default + host/path rules)
+  cleanupOrphanBackends();          // Step 3b – now safe to delete orphaned backends
+
   ensureHTTPSProxy(newCertName);
   ensureHTTPSForwardingRule();
   ensureHTTPRedirect();

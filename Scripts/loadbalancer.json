@@ -1,6 +1,7 @@
 {
   "humrine_site": {
     "domain": "${HUMRINE_DOMAIN}",
+    "defaultBackend": "humrine-backend",
     "certDomains": [
       "${HUMRINE_DOMAIN}",
       "staging.${HUMRINE_DOMAIN}",
